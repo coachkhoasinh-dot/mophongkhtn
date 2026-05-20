@@ -17,17 +17,21 @@
                 extend: {
                     colors: {
                         slate: { 850: '#151f32', 900: '#0f172a', },
+                        stone: { 850: '#292524', 900: '#1c1917', },
                         accent: { 400: '#38bdf8', 500: '#0ea5e9', 600: '#0284c7', },
                         chem: { 400: '#f472b6', 500: '#ec4899', 600: '#db2777', },
                         bio: { 400: '#4ade80', 500: '#22c55e', 600: '#16a34a', }
                     },
-                    fontFamily: { sans: ['Inter', 'sans-serif'], }
+                    fontFamily: { 
+                        sans: ['Inter', 'sans-serif'], 
+                        serif: ['Playfair Display', 'serif']
+                    }
                 }
             }
         }
     </script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap');
         
         body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: #e2e8f0; overflow: hidden; }
         ::-webkit-scrollbar { width: 8px; height: 8px; }
@@ -56,60 +60,90 @@
         .domain-btn.active-chem { border-bottom: 2px solid #f472b6; color: #f472b6; background: rgba(244, 114, 182, 0.1); }
         .domain-btn.active-bio { border-bottom: 2px solid #4ade80; color: #4ade80; background: rgba(74, 222, 128, 0.1); }
 
-        .bg-grid {
-            background-size: 40px 40px;
-            background-image: linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-                              linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+        /* Classic Grid */
+        .bg-grid-classic {
+            background-size: 30px 30px;
+            background-image: linear-gradient(to right, rgba(214, 211, 209, 0.04) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(214, 211, 209, 0.04) 1px, transparent 1px);
         }
     </style>
 </head>
 <body class="h-screen w-full relative">
 
-    <!-- MÀN HÌNH CHÍNH (LANDING PAGE) -->
-    <div id="landing-page" class="absolute inset-0 z-50 flex flex-col items-center justify-center bg-slate-900 bg-grid">
-        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-accent-500/10 blur-[100px] rounded-full pointer-events-none"></div>
+    <!-- MÀN HÌNH CHÍNH (LANDING PAGE) - GIAO DIỆN CỔ ĐIỂN, GỌN GÀNG -->
+    <div id="landing-page" class="absolute inset-0 z-50 flex flex-col items-center bg-stone-900 bg-grid-classic overflow-y-auto">
+        <!-- Ambient Light -->
+        <div class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-amber-700/10 blur-[100px] rounded-full pointer-events-none"></div>
 
-        <div class="absolute top-6 left-6 md:left-8 flex flex-col items-start gap-3 z-10">
-            <p class="text-slate-400 text-sm font-medium tracking-wide bg-slate-800/80 backdrop-blur-sm px-4 py-2 rounded-lg border border-slate-700 shadow-lg">
-                Đội ngũ phát triển: <span class="text-white font-bold ml-1">Nguyễn Tiến Thành</span>
-            </p>
-            <a href="https://docs.google.com/forms/d/e/1FAIpQLScR34xYraffjvpPhGypNgXRpeOW7q09wMXHwcMwNN6E-MSPTQ/viewform?usp=sharing&ouid=100350003607814510703" target="_blank" rel="noopener noreferrer" class="group flex items-center gap-2 text-slate-300 hover:text-white text-sm font-medium transition-all duration-300 bg-slate-800/80 backdrop-blur-sm hover:bg-slate-700 px-4 py-2 rounded-lg border border-slate-700 hover:border-accent-400 shadow-lg">
-                <i class="fa-regular fa-comment-dots text-accent-400 group-hover:-translate-y-0.5 transition-transform"></i> Góp ý sản phẩm
-            </a>
-        </div>
-
-        <div class="text-center mb-12 relative z-10">
-            <div class="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-slate-800 border border-slate-700 text-white text-4xl shadow-xl mb-6">
-                <i class="fa-solid fa-flask"></i>
+        <!-- Top Navigation -->
+        <nav class="w-full max-w-5xl mx-auto px-6 py-4 flex items-center justify-between relative z-10">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-lg bg-stone-800 border border-stone-700 text-amber-500 flex items-center justify-center text-lg shadow-md">
+                    <i class="fa-solid fa-book-open"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-serif font-bold text-stone-200 tracking-tight">KHTN Virtual Lab</h1>
+                    <p class="text-[9px] text-stone-400 font-medium uppercase tracking-widest">Phát triển bởi Nguyễn Tiến Thành</p>
+                </div>
             </div>
-            <h1 class="text-4xl md:text-5xl font-extrabold text-white tracking-tight mb-3">Mô Phỏng Khoa Học Tự Nhiên</h1>
-            <p class="text-lg text-slate-400 font-medium">Virtual Sandbox Laboratory</p>
+            <a href="https://docs.google.com/forms/d/e/1FAIpQLScR34xYraffjvpPhGypNgXRpeOW7q09wMXHwcMwNN6E-MSPTQ/viewform?usp=sharing&ouid=100350003607814510703" target="_blank" rel="noopener noreferrer" class="flex items-center gap-2 text-stone-300 hover:text-white text-xs font-medium transition-colors bg-stone-800/50 hover:bg-stone-700 px-3 py-1.5 rounded-full border border-stone-700">
+                <i class="fa-regular fa-comment-dots text-amber-500"></i> Góp ý
+            </a>
+        </nav>
+
+        <!-- Hero Section -->
+        <div class="text-center mt-10 mb-12 relative z-10 px-4 max-w-2xl mx-auto">
+            <h1 class="text-3xl md:text-5xl font-serif font-bold text-stone-100 tracking-tight mb-4 leading-tight">
+                Khám Phá Thế Giới Khoa Học <br> <span class="text-amber-500 italic">Qua Mô Phỏng Tương Tác</span>
+            </h1>
+            <p class="text-sm md:text-base text-stone-400 font-medium leading-relaxed">
+                Nền tảng học tập trực quan giúp học sinh dễ dàng nắm bắt các hiện tượng Vật Lý, phản ứng Hóa Học và cấu trúc Sinh Học một cách sinh động nhất.
+            </p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl px-6 relative z-10 w-full">
-            <button onclick="enterDomain('physics')" class="group relative bg-slate-800/80 backdrop-blur-sm border border-slate-700 hover:border-accent-400 rounded-2xl p-8 text-left transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_10px_30px_rgba(56,189,248,0.2)]">
-                <div class="w-14 h-14 rounded-xl bg-accent-500/20 text-accent-400 flex items-center justify-center text-2xl mb-6 transition-transform group-hover:scale-110 group-hover:rotate-12">
-                    <i class="fa-solid fa-atom"></i>
+        <!-- Subject Cards Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5 max-w-5xl px-6 pb-20 relative z-10 w-full">
+            <!-- Physics Card -->
+            <div class="group flex flex-col bg-stone-850 border border-stone-700 hover:border-sky-500 rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1 shadow-lg">
+                <div class="h-24 bg-stone-900 border-b border-stone-800 relative overflow-hidden flex items-center justify-center">
+                    <i class="fa-solid fa-rocket text-4xl text-sky-500 group-hover:scale-110 transition-transform duration-500 relative z-10 drop-shadow-[0_0_10px_rgba(14,165,233,0.4)]"></i>
                 </div>
-                <h2 class="text-2xl font-bold text-white mb-2 group-hover:text-accent-400 transition-colors">Vật Lý</h2>
-                <p class="text-slate-400 text-sm leading-relaxed">Mô phỏng chuyển động ném xiên, dao động con lắc, lò xo đàn hồi, hệ thống hấp dẫn và khúc xạ ánh sáng.</p>
-            </button>
+                <div class="p-5 flex-1 flex flex-col">
+                    <h2 class="text-xl font-serif font-bold text-stone-100 mb-1.5">Vật Lý Học</h2>
+                    <p class="text-stone-400 text-xs leading-relaxed mb-5 flex-1">Tìm hiểu định luật vạn vật hấp dẫn, chuyển động ném xiên, bảo toàn cơ năng của con lắc và hiện tượng khúc xạ ánh sáng.</p>
+                    <button onclick="enterDomain('physics')" class="w-full py-2.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-semibold text-sm transition-colors flex justify-center items-center gap-2">
+                        Bắt đầu học <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
 
-            <button onclick="enterDomain('chemistry')" class="group relative bg-slate-800/80 backdrop-blur-sm border border-slate-700 hover:border-chem-400 rounded-2xl p-8 text-left transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_10px_30px_rgba(244,114,182,0.2)]">
-                <div class="w-14 h-14 rounded-xl bg-chem-500/20 text-chem-400 flex items-center justify-center text-2xl mb-6 transition-transform group-hover:scale-110 group-hover:-rotate-12">
-                    <i class="fa-solid fa-vial"></i>
+            <!-- Chemistry Card -->
+            <div class="group flex flex-col bg-stone-850 border border-stone-700 hover:border-pink-500 rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1 shadow-lg">
+                <div class="h-24 bg-stone-900 border-b border-stone-800 relative overflow-hidden flex items-center justify-center">
+                    <i class="fa-solid fa-flask-vial text-4xl text-pink-500 group-hover:scale-110 transition-transform duration-500 relative z-10 drop-shadow-[0_0_10px_rgba(236,72,153,0.4)]"></i>
                 </div>
-                <h2 class="text-2xl font-bold text-white mb-2 group-hover:text-chem-400 transition-colors">Hóa Học</h2>
-                <p class="text-slate-400 text-sm leading-relaxed">Tiến hành chuẩn độ dung dịch Axit - Bazơ, nhúng quỳ tím và quan sát các phản ứng hóa học trực quan.</p>
-            </button>
+                <div class="p-5 flex-1 flex flex-col">
+                    <h2 class="text-xl font-serif font-bold text-stone-100 mb-1.5">Hóa Học</h2>
+                    <p class="text-stone-400 text-xs leading-relaxed mb-5 flex-1">Nghiên cứu cấu tạo hạt, sự chuyển thể của Oxygen, cách dùng quỳ tím chuẩn độ pH và quan sát các phản ứng đặc trưng.</p>
+                    <button onclick="enterDomain('chemistry')" class="w-full py-2.5 rounded-lg bg-pink-600 hover:bg-pink-500 text-white font-semibold text-sm transition-colors flex justify-center items-center gap-2">
+                        Bắt đầu học <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
 
-            <button onclick="enterDomain('biology')" class="group relative bg-slate-800/80 backdrop-blur-sm border border-slate-700 hover:border-bio-400 rounded-2xl p-8 text-left transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_10px_30px_rgba(74,222,128,0.2)]">
-                <div class="w-14 h-14 rounded-xl bg-bio-500/20 text-bio-400 flex items-center justify-center text-2xl mb-6 transition-transform group-hover:scale-110 group-hover:rotate-12">
-                    <i class="fa-solid fa-dna"></i>
+            <!-- Biology Card -->
+            <div class="group flex flex-col bg-stone-850 border border-stone-700 hover:border-emerald-500 rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1 shadow-lg">
+                <div class="h-24 bg-stone-900 border-b border-stone-800 relative overflow-hidden flex items-center justify-center">
+                    <i class="fa-solid fa-dna text-4xl text-emerald-500 group-hover:scale-110 transition-transform duration-500 relative z-10 drop-shadow-[0_0_10px_rgba(34,197,94,0.4)]"></i>
                 </div>
-                <h2 class="text-2xl font-bold text-white mb-2 group-hover:text-bio-400 transition-colors">Sinh Học</h2>
-                <p class="text-slate-400 text-sm leading-relaxed">Mô phỏng giải phẫu hệ tiêu hóa và tương tác chi tiết với các cấu trúc bên trong tế bào động vật.</p>
-            </button>
+                <div class="p-5 flex-1 flex flex-col">
+                    <h2 class="text-xl font-serif font-bold text-stone-100 mb-1.5">Sinh Học</h2>
+                    <p class="text-stone-400 text-xs leading-relaxed mb-5 flex-1">Đi sâu vào giải phẫu hệ tiêu hóa người, theo dõi con đường thức ăn và quan sát vi mô cấu trúc chi tiết của tế bào động vật.</p>
+                    <button onclick="enterDomain('biology')" class="w-full py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm transition-colors flex justify-center items-center gap-2">
+                        Bắt đầu học <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -161,7 +195,7 @@
             <div class="flex-1 relative w-full h-full rounded-xl overflow-hidden border border-slate-700 shadow-2xl bg-slate-800">
                 <div class="absolute inset-0 pointer-events-none" style="background-image: linear-gradient(to right, #334155 1px, transparent 1px), linear-gradient(to bottom, #334155 1px, transparent 1px); background-size: 50px 50px; opacity: 0.15;"></div>
                 <canvas id="simCanvas"></canvas>
-                <div id="hud-info" class="absolute top-4 left-4 pointer-events-none bg-slate-900/80 backdrop-blur-sm p-3 rounded-lg border border-slate-700 text-sm font-mono text-white space-y-1 shadow-lg"></div>
+                <div id="hud-info" class="absolute top-4 left-4 pointer-events-none bg-slate-900/80 backdrop-blur-sm p-3 rounded-lg border border-slate-700 text-sm font-mono text-white space-y-1 shadow-lg z-20"></div>
             </div>
 
             <div id="chart-container" class="hidden h-48 w-full mt-4 bg-slate-800 rounded-xl border border-slate-700 p-4 relative">
@@ -221,6 +255,7 @@
                 { id: 'gravity', icon: 'fa-earth-moon', name: 'Hấp Dẫn' }, { id: 'optics', icon: 'fa-lightbulb', name: 'Khúc Xạ' }
             ],
             chemistry: [
+                { id: 'states', icon: 'fa-cubes', name: 'Trạng Thái Vật Chất' },
                 { id: 'titration', icon: 'fa-vial-circle-check', name: 'Chuẩn độ & Quỳ tím' },
                 { id: 'reactions', icon: 'fa-fire-flame-curved', name: 'Phản Ứng Hóa Học' }
             ],
@@ -580,6 +615,240 @@
         }
 
         // ==========================================
+        // CHEMISTRY SIMULATION: STATES OF MATTER (OXYGEN)
+        // ==========================================
+        simulations.states = {
+            state: { targetTemp: 25, temp: 25, particles: [], isMacro: false },
+            origin: { x: 0, y: 0 },
+            initPositions() { this.origin.x = canvas.width / 2; this.origin.y = canvas.height / 2 + 50; },
+            init() { 
+                this.initPositions(); 
+                this.state.particles = [];
+                // Sắp xếp 150 hạt dạng lưới ở đáy (Dùng làm điểm neo cho thể Rắn)
+                const startX = this.origin.x - 100;
+                const startY = this.origin.y + 55; 
+                for(let row=0; row<10; row++) {
+                    for(let col=0; col<15; col++) {
+                        this.state.particles.push({
+                            gx: startX + col*14.5, gy: startY - row*14.5,
+                            x: startX + col*14.5 + (Math.random()-0.5)*150, // Ban đầu tản mạn
+                            y: startY - row*14.5 - Math.random()*150,
+                            vx: (Math.random()-0.5) * 5, vy: (Math.random()-0.5) * 5,
+                            angle: Math.random() * Math.PI
+                        });
+                    }
+                }
+                this.loop(); 
+            },
+            reset() { this.init(); this.state.targetTemp = 25; this.state.temp = 25; this.state.isMacro = false; },
+            setPhase(temp) { this.state.targetTemp = temp; },
+            toggleMacro() {
+                this.state.isMacro = !this.state.isMacro;
+                const btn = document.getElementById('btn-states-macro');
+                if(btn) {
+                    btn.className = `w-10 h-5 rounded-full ${this.state.isMacro ? 'bg-pink-500' : 'bg-slate-600'} relative transition-colors duration-300 focus:outline-none`;
+                    btn.children[0].className = `w-3 h-3 rounded-full bg-white absolute top-1 transition-transform duration-300 ${this.state.isMacro ? 'translate-x-6' : 'translate-x-1'}`;
+                }
+            },
+            update() {
+                if(isPaused) return;
+                globalTime++;
+                
+                // Mượt mà hóa quá trình thay đổi nhiệt độ
+                this.state.temp += (this.state.targetTemp - this.state.temp) * 0.05;
+                
+                // Cài đặt Vật lý theo từng trạng thái
+                let gravity = 0; let speedLimit = 0; let damp = 1.0;
+                
+                if (this.state.temp <= -218) { // THỂ RẮN
+                    gravity = 0; speedLimit = 1.0; damp = 0.8;
+                } else if (this.state.temp <= -180) { // THỂ LỎNG (-183 độ C)
+                    gravity = 0.25; speedLimit = 3.5; damp = 0.92;
+                } else { // THỂ KHÍ
+                    gravity = 0; speedLimit = 8.0; damp = 1.0;
+                }
+
+                const collisionRadius = 7.5; // Kích thước hạt để va chạm (vừa đủ để xếp chồng lên nhau như ảnh)
+                const bounds = { left: this.origin.x - 120, right: this.origin.x + 120, top: this.origin.y - 200, bottom: this.origin.y + 65 };
+
+                // 1. Tương tác đẩy mềm (Van der Waals Soft Repulsion) - Giúp hạt xếp chồng lên nhau ở thể Lỏng
+                for(let i=0; i<this.state.particles.length; i++) {
+                    for(let j=i+1; j<this.state.particles.length; j++) {
+                        let dx = this.state.particles[j].x - this.state.particles[i].x;
+                        let dy = this.state.particles[j].y - this.state.particles[i].y;
+                        let distSq = dx*dx + dy*dy;
+                        
+                        let actualMinDist = (this.state.temp <= -218) ? collisionRadius * 1.8 : collisionRadius * 2.0;
+                        if(distSq < actualMinDist*actualMinDist && distSq > 0.01) {
+                            let dist = Math.sqrt(distSq);
+                            let overlap = actualMinDist - dist;
+                            // Ở thể lỏng, tương tác đẩy mạnh (1.2) để hạt không bị lún vào nhau mà xếp chồng lên nhau tạo khối
+                            let force = (overlap / actualMinDist) * (this.state.temp <= -218 ? 0.1 : 1.2); 
+                            let fx = (dx/dist) * force; let fy = (dy/dist) * force;
+                            this.state.particles[i].vx -= fx; this.state.particles[i].vy -= fy;
+                            this.state.particles[j].vx += fx; this.state.particles[j].vy += fy;
+                        }
+                    }
+                }
+
+                // 2. Cập nhật vị trí từng hạt
+                this.state.particles.forEach(p => {
+                    if (this.state.temp <= -218) {
+                        // Thể Rắn: Lực hồi phục mạnh kéo về điểm tinh thể
+                        p.vx += (p.gx - p.x) * 0.15; p.vy += (p.gy - p.y) * 0.15;
+                        p.vx += (Math.random()-0.5) * 0.4; p.vy += (Math.random()-0.5) * 0.4; // Rung nhiệt
+                    } else if (this.state.temp <= -180) {
+                        // Thể Lỏng: Rơi tự do, chuyển động Brownian nhẹ, tạo đống ở đáy bình
+                        p.vy += gravity;
+                        p.vx += (Math.random()-0.5) * 0.3; p.vy += (Math.random()-0.5) * 0.3;
+                    } else {
+                        // Thể Khí: Vận tốc cao ngẫu nhiên
+                        p.vx += (Math.random()-0.5) * 3; p.vy += (Math.random()-0.5) * 3;
+                    }
+
+                    // Áp dụng giới hạn tốc độ và lực cản
+                    p.vx *= damp; p.vy *= damp;
+                    let speed = Math.hypot(p.vx, p.vy);
+                    if(speed > speedLimit) { p.vx = (p.vx/speed)*speedLimit; p.vy = (p.vy/speed)*speedLimit; }
+
+                    p.x += p.vx * timeScale; p.y += p.vy * timeScale;
+                    p.angle += (Math.random()-0.5) * ((this.state.temp + 250)/80) * timeScale;
+
+                    // Va chạm thành bình (Elastic Bounce)
+                    let bounce = this.state.temp > -180 ? -1 : -0.3; // Thể lỏng nảy kém hơn để đọng lại ở đáy
+                    if(p.x < bounds.left + collisionRadius) { p.x = bounds.left + collisionRadius; p.vx *= bounce; }
+                    if(p.x > bounds.right - collisionRadius) { p.x = bounds.right - collisionRadius; p.vx *= bounce; }
+                    if(p.y < bounds.top + collisionRadius) { p.y = bounds.top + collisionRadius; p.vy *= bounce; }
+                    if(p.y > bounds.bottom - collisionRadius) { p.y = bounds.bottom - collisionRadius; p.vy *= bounce; }
+                });
+
+                let phaseName = this.state.temp <= -218 ? "Rắn" : (this.state.temp <= -180 ? "Lỏng" : "Khí");
+                let phaseDesc = "";
+                if(this.state.temp <= -218) phaseDesc = "Các hạt xếp sát thành cấu trúc đều. Chỉ rung nhẹ tại chỗ.";
+                else if(this.state.temp <= -180) phaseDesc = "Các hạt gần nhau hơn. Chuyển động mềm và chậm hơn.";
+                else phaseDesc = "Các hạt ở rất xa nhau. Chuyển động nhanh và hỗn loạn.";
+
+                hudInfo.innerHTML = `
+                    <div class="text-chem-400 font-bold mb-1"><i class="fa-solid fa-cubes"></i> Trạng thái vật chất (Oxygen - O₂)</div>
+                    <div>Nhiệt độ: <span class="text-white">${Math.round(this.state.temp)} °C</span></div>
+                    <div>Trạng thái: <span class="text-white font-bold">${phaseName}</span></div>
+                    <div class="text-xs text-slate-300 mt-1 italic">${phaseDesc}</div>
+                `;
+            },
+            draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height); 
+                const ox = this.origin.x; const oy = this.origin.y;
+
+                // Xác định màu sắc của môi trường tập hợp
+                let envColor = 'transparent';
+                if(this.state.temp <= -218) envColor = 'rgba(30, 58, 138, 0.6)'; // Môi trường Xanh dương đậm
+                else if (this.state.temp <= -180) envColor = 'rgba(56, 189, 248, 0.3)'; // Môi trường Xanh dương nhạt
+
+                // 1. VẼ VỎ BÌNH CHỨA (Đồ họa 3D Cực đại)
+                // Khung kim loại viền ngoài
+                ctx.fillStyle = '#475569';
+                ctx.beginPath(); ctx.roundRect(ox - 145, oy - 225, 290, 310, 16); ctx.fill();
+                
+                const frameGrad = ctx.createLinearGradient(ox - 145, 0, ox + 145, 0);
+                frameGrad.addColorStop(0, '#1e293b'); frameGrad.addColorStop(0.2, '#94a3b8'); 
+                frameGrad.addColorStop(0.8, '#64748b'); frameGrad.addColorStop(1, '#0f172a');
+                ctx.fillStyle = frameGrad;
+                ctx.beginPath(); ctx.roundRect(ox - 140, oy - 220, 280, 300, 12); ctx.fill();
+                
+                // Lòng bình tối thẳm
+                ctx.fillStyle = '#020617'; 
+                ctx.beginPath(); ctx.roundRect(ox - 130, oy - 210, 260, 280, 6); ctx.fill();
+
+                if (this.state.isMacro) {
+                    // CHẾ ĐỘ VĨ MÔ (Không hạt)
+                    if (this.state.temp <= -218) {
+                        ctx.fillStyle = '#1e3a8a'; // Khối băng rắn
+                        ctx.beginPath(); ctx.roundRect(ox - 130, oy - 50, 260, 120, 5); ctx.fill();
+                        ctx.fillStyle = 'rgba(255,255,255,0.08)'; // Hiệu ứng băng tinh thể
+                        ctx.beginPath(); ctx.moveTo(ox-130, oy-50); ctx.lineTo(ox-20, oy-50); ctx.lineTo(ox-130, oy+40); ctx.fill();
+                        ctx.beginPath(); ctx.moveTo(ox+130, oy-50); ctx.lineTo(ox+50, oy-50); ctx.lineTo(ox+130, oy+70); ctx.fill();
+                    } else if (this.state.temp <= -180) {
+                        const liqGrad = ctx.createLinearGradient(0, oy - 40, 0, oy + 70);
+                        liqGrad.addColorStop(0, 'rgba(56, 189, 248, 0.4)'); liqGrad.addColorStop(1, 'rgba(2, 132, 199, 0.8)');
+                        ctx.fillStyle = liqGrad; 
+                        ctx.beginPath(); 
+                        ctx.moveTo(ox - 130, oy - 40);
+                        for(let i = -130; i <= 130; i += 10) ctx.lineTo(ox + i, oy - 40 + Math.sin(i*0.05 + globalTime*0.05)*5);
+                        ctx.lineTo(ox + 130, oy + 70); ctx.lineTo(ox - 130, oy + 70);
+                        ctx.fill();
+                    } else {
+                        ctx.fillStyle = 'rgba(255, 255, 255, 0.05)'; // Khí mờ
+                        ctx.beginPath(); ctx.roundRect(ox - 130, oy - 210, 260, 280, 5); ctx.fill();
+                    }
+                } else {
+                    // CHẾ ĐỘ VI MÔ (150 hạt O2)
+                    ctx.fillStyle = envColor; 
+                    ctx.beginPath(); ctx.roundRect(ox - 130, oy - 210, 260, 280, 5); ctx.fill();
+                    
+                    // Vẽ các hạt với hiệu ứng phát sáng nhẹ
+                    this.state.particles.forEach(p => {
+                        ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.angle);
+                        
+                        // Quầng sáng mờ (Glow)
+                        ctx.shadowColor = 'rgba(255, 255, 255, 0.6)'; ctx.shadowBlur = 5;
+                        
+                        // Hạt 1
+                        const g1 = ctx.createRadialGradient(-3.5, -1, 0, -3.5, 0, 4);
+                        g1.addColorStop(0, '#ffffff'); g1.addColorStop(1, '#e2e8f0');
+                        ctx.fillStyle = g1;
+                        ctx.beginPath(); ctx.arc(-3.5, 0, 4, 0, Math.PI*2); ctx.fill();
+                        
+                        // Hạt 2
+                        const g2 = ctx.createRadialGradient(3.5, -1, 0, 3.5, 0, 4);
+                        g2.addColorStop(0, '#ffffff'); g2.addColorStop(1, '#e2e8f0');
+                        ctx.fillStyle = g2;
+                        ctx.beginPath(); ctx.arc(3.5, 0, 4, 0, Math.PI*2); ctx.fill();
+                        
+                        ctx.restore();
+                    });
+                }
+
+                // 2. VẼ LỚP KÍNH PHÍA TRƯỚC (Bóng loáng)
+                const frontGrad = ctx.createLinearGradient(ox - 140, 0, ox + 140, 0);
+                frontGrad.addColorStop(0, 'rgba(255,255,255,0.15)'); frontGrad.addColorStop(0.3, 'rgba(255,255,255,0)'); 
+                frontGrad.addColorStop(0.7, 'rgba(255,255,255,0)'); frontGrad.addColorStop(1, 'rgba(255,255,255,0.08)');
+                ctx.fillStyle = frontGrad;
+                ctx.beginPath(); ctx.roundRect(ox - 130, oy - 210, 260, 280, 6); ctx.fill();
+                // Phản chiếu chéo
+                ctx.fillStyle = 'rgba(255,255,255,0.03)';
+                ctx.beginPath(); ctx.moveTo(ox-130, oy-210); ctx.lineTo(ox-50, oy-210); ctx.lineTo(ox-130, oy+50); ctx.fill();
+
+                // 3. VẼ NHIỆT KẾ (Nâng cấp)
+                const thermX = ox - 90; const thermY = oy - 180;
+                // Vỏ nhiệt kế
+                ctx.fillStyle = 'rgba(255,255,255,0.9)';
+                ctx.beginPath(); ctx.roundRect(thermX - 6, thermY - 50, 12, 100, 6); ctx.fill();
+                // Bầu nhiệt kế
+                const bulbGrad = ctx.createRadialGradient(thermX-2, thermY+50-2, 2, thermX, thermY+50, 14);
+                bulbGrad.addColorStop(0, '#fca5a5'); bulbGrad.addColorStop(1, '#dc2626');
+                ctx.fillStyle = bulbGrad;
+                ctx.beginPath(); ctx.arc(thermX, thermY + 50, 14, 0, Math.PI*2); ctx.fill();
+                // Cột thủy ngân
+                let mercuryH = Math.max(0, Math.min(90, ((this.state.temp + 250) / 300) * 90));
+                ctx.fillStyle = '#ef4444';
+                ctx.fillRect(thermX - 2, thermY + 40 - mercuryH, 4, mercuryH + 10);
+                // Vạch chia độ
+                ctx.fillStyle = '#334155';
+                for(let i=0; i<=90; i+=10) {
+                    ctx.fillRect(thermX - 4, thermY + 40 - i, (i%30===0) ? 8 : 4, 1);
+                }
+
+                // Ghi chú giáo dục cho học sinh
+                if(!this.state.isMacro) {
+                    ctx.fillStyle = '#94a3b8'; ctx.font = '12px Inter'; ctx.textAlign = 'center';
+                    ctx.fillText('* Các phân tử oxygen không tự đổi màu.', ox, oy + 120);
+                    ctx.fillText('Màu xanh xuất hiện khi nhiều phân tử ở gần nhau.', ox, oy + 140);
+                }
+            },
+            loop() { if(currentSim !== 'states') return; this.update(); this.draw(); animationId = requestAnimationFrame(() => this.loop()); }
+        };
+
+        // ==========================================
         // CHEMISTRY SIMULATION: CHUẨN ĐỘ & QUỲ TÍM
         // ==========================================
         simulations.titration = {
@@ -617,7 +886,6 @@
             update() {
                 if(isPaused) return;
 
-                // Cập nhật giọt dung dịch
                 for(let i = this.state.drops.length - 1; i >= 0; i--) {
                     let d = this.state.drops[i]; d.vy += 0.5; d.y += d.vy;
                     const liquidLevelY = this.origin.y - this.state.volume;
@@ -634,14 +902,12 @@
                     }
                 }
 
-                // Cập nhật bọt khí
                 for(let i = this.state.bubbles.length - 1; i >= 0; i--) {
                     let b = this.state.bubbles[i]; b.y += b.vy; b.x += Math.sin(globalTime*0.1 + b.y)*1; b.life -= 0.02;
                     if(b.life <= 0 || b.y < this.origin.y - 250) this.state.bubbles.splice(i, 1);
                 }
                 this.state.stirAngle += 0.1; globalTime++;
 
-                // Cập nhật Hoạt ảnh Quỳ Tím
                 if(this.state.litmus.active) {
                     const liquidY = this.origin.y - this.state.volume;
                     if(this.state.litmus.phase === 0) { // Đi xuống
@@ -649,7 +915,6 @@
                         if(this.state.litmus.y + 70 >= liquidY) { // Chạm nước
                             this.state.litmus.phase = 1;
                             this.state.litmus.waitTimer = 40; // Đứng yên 40 frames
-                            // Đổi màu giấy quỳ dựa theo pH
                             if(this.state.pH < 6.0) this.state.litmus.color = '#ef4444'; // Đỏ (Axit)
                             else if(this.state.pH > 8.0) this.state.litmus.color = '#3b82f6'; // Xanh (Bazơ)
                             else this.state.litmus.color = '#a855f7'; // Tím (Trung tính)
@@ -677,7 +942,6 @@
                 ctx.beginPath(); ctx.moveTo(0, oy); ctx.lineTo(canvas.width, oy); ctx.strokeStyle = '#334155'; ctx.lineWidth = 4; ctx.stroke();
                 const liqY = oy - this.state.volume; const flaskW = 120;
                 
-                // Vẽ nước trong bình
                 ctx.save(); ctx.beginPath(); ctx.moveTo(ox - 30, oy - 220); ctx.lineTo(ox - 30, oy - 120);
                 ctx.bezierCurveTo(ox - flaskW, oy - 80, ox - flaskW, oy, ox, oy); ctx.bezierCurveTo(ox + flaskW, oy, ox + flaskW, oy - 80, ox + 30, oy - 120); 
                 ctx.lineTo(ox + 30, oy - 220); ctx.clip();
@@ -689,13 +953,11 @@
                 ctx.fillStyle = 'rgba(255, 255, 255, 0.5)'; this.state.bubbles.forEach(b => { ctx.beginPath(); ctx.arc(b.x, b.y, b.size, 0, Math.PI*2); ctx.fill(); });
                 ctx.restore();
 
-                // Vẽ vỏ bình
                 ctx.beginPath(); ctx.moveTo(ox - 30, oy - 250); ctx.lineTo(ox - 30, oy - 120);
                 ctx.bezierCurveTo(ox - flaskW, oy - 80, ox - flaskW, oy, ox, oy); ctx.bezierCurveTo(ox + flaskW, oy, ox + flaskW, oy - 80, ox + 30, oy - 120); 
                 ctx.lineTo(ox + 30, oy - 250); ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)'; ctx.lineWidth = 4; ctx.stroke();
                 ctx.beginPath(); ctx.moveTo(ox - 35, oy - 250); ctx.lineTo(ox + 35, oy - 250); ctx.lineWidth = 6; ctx.stroke();
 
-                // Vẽ Hoạt ảnh Quỳ Tím (Nằm trong bình, cắm từ trên xuống)
                 if(this.state.litmus.active) {
                     const lX = ox + 40; const lY = this.state.litmus.y;
                     
@@ -736,7 +998,6 @@
                 const ox = this.origin.x; const oy = this.origin.y;
 
                 if (this.state.activeRx === 'mg_o2') {
-                    // Cháy Magie: Lóe sáng trắng và tia lửa
                     if(this.state.progress < 3.0) {
                         for(let i=0; i<5; i++) {
                             this.state.particles.push({
@@ -747,7 +1008,6 @@
                         }
                     }
                 } else if (this.state.activeRx === 'zn_hcl') {
-                    // Zn + HCl: Sủi bọt khí H2 liên tục
                     if(this.state.progress < 4.0) {
                         for(let i=0; i<3; i++) {
                             this.state.bubbles.push({
@@ -757,30 +1017,23 @@
                         }
                     }
                 } else if (this.state.activeRx === 'cuso4_naoh') {
-                    // Tạo kết tủa xanh Cu(OH)2
                     if(this.state.progress < 2.5 && Math.random() < 0.3) {
                         this.state.particles.push({
                             x: ox + (Math.random()-0.5)*60, y: oy - 150,
-                            vy: Math.random()*2 + 1, life: 1.0, color: '#2563eb', // Xanh đậm kết tủa
+                            vy: Math.random()*2 + 1, life: 1.0, color: '#2563eb', 
                             isPrecipitate: true
                         });
                     }
                 }
 
-                // Cập nhật hạt
                 for(let i = this.state.particles.length - 1; i >= 0; i--) {
                     let p = this.state.particles[i];
                     p.x += p.vx || 0; p.y += p.vy;
-                    if(!p.isPrecipitate) {
-                        p.vy += 0.5; // Trọng lực tia lửa
-                        p.life -= 0.03;
-                    } else {
-                        if(p.y > oy - 10) { p.y = oy - 10; p.vy = 0; } // Kết tủa rớt xuống đáy
-                    }
+                    if(!p.isPrecipitate) { p.vy += 0.5; p.life -= 0.03; } 
+                    else { if(p.y > oy - 10) { p.y = oy - 10; p.vy = 0; } }
                     if(p.life <= 0) this.state.particles.splice(i, 1);
                 }
 
-                // Cập nhật bọt
                 for(let i = this.state.bubbles.length - 1; i >= 0; i--) {
                     let b = this.state.bubbles[i];
                     b.y += b.vy; b.x += Math.sin(b.y*0.1)*2; b.life -= 0.01;
@@ -802,7 +1055,6 @@
             draw() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height); const ox = this.origin.x; const oy = this.origin.y;
                 
-                // Màn hình chớp sáng nếu Mg cháy
                 if(this.state.activeRx === 'mg_o2' && this.state.progress > 0 && this.state.progress < 3.0) {
                     ctx.fillStyle = `rgba(255, 255, 255, ${Math.random()*0.3 + 0.1})`;
                     ctx.fillRect(0,0,canvas.width,canvas.height);
@@ -812,33 +1064,22 @@
                 ctx.beginPath(); ctx.moveTo(0, oy); ctx.lineTo(canvas.width, oy); ctx.strokeStyle = '#334155'; ctx.lineWidth = 4; ctx.stroke();
 
                 if(this.state.activeRx !== 'mg_o2' && this.state.activeRx !== null) {
-                    // Vẽ cốc Beaker cho phản ứng dung dịch
                     const bw = 60;
-                    ctx.fillStyle = this.state.flaskColor;
-                    ctx.fillRect(ox - bw, oy - 150, bw*2, 150);
-                    
-                    // Bọt khí
+                    ctx.fillStyle = this.state.flaskColor; ctx.fillRect(ox - bw, oy - 150, bw*2, 150);
                     ctx.fillStyle = 'rgba(255,255,255,0.7)';
                     this.state.bubbles.forEach(b => { ctx.beginPath(); ctx.arc(b.x, b.y, b.size, 0, Math.PI*2); ctx.fill(); });
-                    
-                    // Kết tủa
                     this.state.particles.filter(p=>p.isPrecipitate).forEach(p => {
                         ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, 4, 0, Math.PI*2); ctx.fill();
                     });
 
-                    // Vỏ cốc
                     ctx.strokeStyle = 'rgba(255,255,255,0.6)'; ctx.lineWidth = 4;
                     ctx.beginPath(); ctx.moveTo(ox-bw, oy-180); ctx.lineTo(ox-bw, oy); ctx.lineTo(ox+bw, oy); ctx.lineTo(ox+bw, oy-180); ctx.stroke();
-                    
-                    // Cục kẽm
                     if(this.state.activeRx === 'zn_hcl' && this.state.progress < 4.0) {
                         ctx.fillStyle = '#94a3b8'; ctx.fillRect(ox-15, oy-15, 30, 15);
                     }
                 } else if (this.state.activeRx === 'mg_o2') {
-                    // Đế đốt
                     ctx.fillStyle = '#475569'; ctx.fillRect(ox-30, oy-20, 60, 20);
                     ctx.fillStyle = '#cbd5e1'; ctx.fillRect(ox-5, oy-40, 10, 20); // Dây Magie
-                    // Hạt lửa
                     this.state.particles.forEach(p => {
                         ctx.globalAlpha = p.life; ctx.fillStyle = p.color;
                         ctx.beginPath(); ctx.arc(p.x, p.y, Math.random()*4+2, 0, Math.PI*2); ctx.fill();
@@ -880,27 +1121,17 @@
                     let unX = (cx - this.origin.x) / scale; let unY = (cy - this.origin.y) / scale;
                     
                     const hits = [
-                        { id: 'salivary', x: 20, y: -120, r: 15 },
-                        { id: 'mouth', x: -10, y: -115, r: 20 },
-                        { id: 'esophagus', x: 5, y: -70, r: 20 },
-                        { id: 'stomach', x: 20, y: 5, r: 25 },
-                        { id: 'liver', x: -15, y: -5, r: 35 },
-                        { id: 'gallbladder', x: -10, y: 15, r: 10 },
-                        { id: 'pancreas', x: 15, y: 18, r: 15 },
-                        { id: 'largeIntestine', x: 0, y: 60, r: 40 },
-                        { id: 'appendix', x: -28, y: 100, r: 15 },
-                        { id: 'smallIntestine', x: 0, y: 60, r: 30 },
+                        { id: 'salivary', x: 20, y: -120, r: 15 }, { id: 'mouth', x: -10, y: -115, r: 20 },
+                        { id: 'esophagus', x: 5, y: -70, r: 20 }, { id: 'stomach', x: 20, y: 5, r: 25 },
+                        { id: 'liver', x: -15, y: -5, r: 35 }, { id: 'gallbladder', x: -10, y: 15, r: 10 },
+                        { id: 'pancreas', x: 15, y: 18, r: 15 }, { id: 'largeIntestine', x: 0, y: 60, r: 40 },
+                        { id: 'appendix', x: -28, y: 100, r: 15 }, { id: 'smallIntestine', x: 0, y: 60, r: 30 },
                         { id: 'rectum', x: 10, y: 105, r: 20 }
                     ];
-                    
                     const orderedHits = ['appendix', 'gallbladder', 'pancreas', 'salivary', 'mouth', 'esophagus', 'stomach', 'smallIntestine', 'liver', 'largeIntestine', 'rectum'];
-                    
                     for(let id of orderedHits) {
                         let h = hits.find(i => i.id === id);
-                        if (h && Math.hypot(unX - h.x, unY - h.y) < h.r) { 
-                            this.state.selectedOrgan = h.id; 
-                            break; 
-                        }
+                        if (h && Math.hypot(unX - h.x, unY - h.y) < h.r) { this.state.selectedOrgan = h.id; break; }
                     }
                 };
             },
@@ -909,288 +1140,122 @@
                     globalTime += timeScale;
                     if(this.state.isEating) {
                         this.state.foodProgress += 0.005 * timeScale;
-                        if(this.state.foodProgress >= 1) {
-                            this.state.isEating = false;
-                            this.state.foodProgress = 0;
-                        }
+                        if(this.state.foodProgress >= 1) { this.state.isEating = false; this.state.foodProgress = 0; }
                     }
                 }
-                hudInfo.innerHTML = `
-                    <div class="text-bio-400 font-bold mb-1"><i class="fa-solid fa-person-dots-from-line"></i> Giải phẫu Hệ Tiêu Hóa</div>
-                    <div class="text-xs text-slate-300 mb-2 italic animate-pulse">👉 Click vào các cơ quan để xem chi tiết</div>
-                `;
+                hudInfo.innerHTML = `<div class="text-bio-400 font-bold mb-1"><i class="fa-solid fa-person-dots-from-line"></i> Giải phẫu Hệ Tiêu Hóa</div><div class="text-xs text-slate-300 mb-2 italic animate-pulse">👉 Click vào các cơ quan để xem chi tiết</div>`;
             },
             draw() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                const ox = this.origin.x; const oy = this.origin.y;
-                const minDim = Math.min(canvas.width, canvas.height);
-                const scale = minDim < 600 ? minDim / 600 : 1.2; // Tăng scale nhẹ để dễ nhìn
+                ctx.clearRect(0, 0, canvas.width, canvas.height); const ox = this.origin.x; const oy = this.origin.y;
+                const minDim = Math.min(canvas.width, canvas.height); const scale = minDim < 600 ? minDim / 600 : 1.2;
                 
-                ctx.save();
-                ctx.translate(ox, oy); ctx.scale(scale, scale); ctx.translate(-ox, -oy);
+                ctx.save(); ctx.translate(ox, oy); ctx.scale(scale, scale); ctx.translate(-ox, -oy);
 
-                // Bóng người (Silhouette) profile mặt trái
-                ctx.fillStyle = 'rgba(148, 163, 184, 0.1)'; 
-                ctx.strokeStyle = 'rgba(148, 163, 184, 0.2)'; ctx.lineWidth = 2;
+                ctx.fillStyle = 'rgba(148, 163, 184, 0.1)'; ctx.strokeStyle = 'rgba(148, 163, 184, 0.2)'; ctx.lineWidth = 2;
                 ctx.beginPath(); 
-                // Vẽ đầu
                 ctx.arc(ox + 10, oy - 150, 35, -Math.PI/2, Math.PI*0.8); 
-                // Mặt và Mũi
                 ctx.bezierCurveTo(ox - 30, oy - 145, ox - 35, oy - 135, ox - 35, oy - 130); 
-                ctx.lineTo(ox - 25, oy - 125); // Mũi thụt vào
-                ctx.lineTo(ox - 35, oy - 120); // Môi trên
-                ctx.lineTo(ox - 25, oy - 115); // Miệng
-                ctx.lineTo(ox - 30, oy - 110); // Cằm
-                ctx.lineTo(ox - 15, oy - 95); // Cổ
-                // Vai và thân
-                ctx.lineTo(ox - 50, oy - 70); 
-                ctx.lineTo(ox - 80, oy + 50); // Tay trái
-                ctx.lineTo(ox - 50, oy + 50); 
-                ctx.lineTo(ox - 45, oy + 120); // Chân trái
-                ctx.lineTo(ox + 45, oy + 120); // Chân phải
-                ctx.lineTo(ox + 50, oy + 50); 
-                ctx.lineTo(ox + 80, oy + 50); // Tay phải
-                ctx.lineTo(ox + 50, oy - 70); 
-                ctx.lineTo(ox + 30, oy - 90); // Cổ phải
-                ctx.closePath();
+                ctx.lineTo(ox - 25, oy - 125); ctx.lineTo(ox - 35, oy - 120); ctx.lineTo(ox - 25, oy - 115); 
+                ctx.lineTo(ox - 30, oy - 110); ctx.lineTo(ox - 15, oy - 95); ctx.lineTo(ox - 50, oy - 70); 
+                ctx.lineTo(ox - 80, oy + 50); ctx.lineTo(ox - 50, oy + 50); ctx.lineTo(ox - 45, oy + 120); 
+                ctx.lineTo(ox + 45, oy + 120); ctx.lineTo(ox + 50, oy + 50); ctx.lineTo(ox + 80, oy + 50); 
+                ctx.lineTo(ox + 50, oy - 70); ctx.lineTo(ox + 30, oy - 90); ctx.closePath();
                 ctx.fill(); ctx.stroke();
 
-                ctx.globalAlpha = 0.95;
+                ctx.globalAlpha = 0.95; ctx.shadowColor = 'rgba(0, 0, 0, 0.5)'; ctx.shadowBlur = 10; ctx.shadowOffsetX = 3; ctx.shadowOffsetY = 5;
 
-                // THÊM ĐỔ BÓNG (DROP SHADOW) CHO TOÀN BỘ NỘI TẠNG
-                ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
-                ctx.shadowBlur = 10;
-                ctx.shadowOffsetX = 3;
-                ctx.shadowOffsetY = 5;
-
-                // 1. Tuyến nước bọt (Salivary Gland)
-                const salGrad = ctx.createRadialGradient(ox+15, oy-125, 2, ox+15, oy-125, 10);
-                salGrad.addColorStop(0, '#fde68a'); salGrad.addColorStop(1, '#d97706');
-                ctx.fillStyle = salGrad;
-                ctx.beginPath(); ctx.ellipse(ox + 15, oy - 125, 8, 12, 0.5, 0, Math.PI*2); ctx.fill();
+                const salGrad = ctx.createRadialGradient(ox+15, oy-125, 2, ox+15, oy-125, 10); salGrad.addColorStop(0, '#fde68a'); salGrad.addColorStop(1, '#d97706');
+                ctx.fillStyle = salGrad; ctx.beginPath(); ctx.ellipse(ox + 15, oy - 125, 8, 12, 0.5, 0, Math.PI*2); ctx.fill();
                 ctx.beginPath(); ctx.ellipse(ox + 25, oy - 115, 10, 6, -0.2, 0, Math.PI*2); ctx.fill();
 
                 ctx.shadowColor = 'transparent';
 
-                // 2. Khoang miệng & Thực quản (Mouth & Esophagus)
-                const esoGrad = ctx.createLinearGradient(ox, oy-115, ox+10, oy-20);
-                esoGrad.addColorStop(0, '#f472b6'); esoGrad.addColorStop(1, '#e11d48');
+                const esoGrad = ctx.createLinearGradient(ox, oy-115, ox+10, oy-20); esoGrad.addColorStop(0, '#f472b6'); esoGrad.addColorStop(1, '#e11d48');
                 ctx.strokeStyle = esoGrad; ctx.lineWidth = 8; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-                ctx.beginPath(); 
-                ctx.moveTo(ox - 25, oy - 115); // Khớp với mồm
-                ctx.lineTo(ox + 5, oy - 115); 
-                ctx.quadraticCurveTo(ox + 10, oy - 115, ox + 10, oy - 100);
-                ctx.lineTo(ox + 5, oy - 20); 
-                ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(ox - 25, oy - 115); ctx.lineTo(ox + 5, oy - 115); ctx.quadraticCurveTo(ox + 10, oy - 115, ox + 10, oy - 100); ctx.lineTo(ox + 5, oy - 20); ctx.stroke();
 
                 ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
 
-                // 3. Dạ dày (Stomach) - Gradient 3D
-                const stomGrad = ctx.createRadialGradient(ox+15, oy, 5, ox+15, oy, 30);
-                stomGrad.addColorStop(0, '#f472b6'); stomGrad.addColorStop(1, '#9d174d');
+                const stomGrad = ctx.createRadialGradient(ox+15, oy, 5, ox+15, oy, 30); stomGrad.addColorStop(0, '#f472b6'); stomGrad.addColorStop(1, '#9d174d');
                 ctx.fillStyle = stomGrad; ctx.strokeStyle = '#831843'; ctx.lineWidth = 1.5;
-                ctx.beginPath();
-                ctx.moveTo(ox + 5, oy - 20);
-                ctx.bezierCurveTo(ox + 40, oy - 30, ox + 50, oy + 10, ox + 20, oy + 20);
-                ctx.bezierCurveTo(ox + 5, oy + 25, ox - 5, oy + 15, ox + 10, oy + 10);
-                ctx.bezierCurveTo(ox + 20, oy + 5, ox + 15, oy - 15, ox + 5, oy - 20);
-                ctx.fill(); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(ox + 5, oy - 20); ctx.bezierCurveTo(ox + 40, oy - 30, ox + 50, oy + 10, ox + 20, oy + 20); ctx.bezierCurveTo(ox + 5, oy + 25, ox - 5, oy + 15, ox + 10, oy + 10); ctx.bezierCurveTo(ox + 20, oy + 5, ox + 15, oy - 15, ox + 5, oy - 20); ctx.fill(); ctx.stroke();
 
-                // Nếp gấp dạ dày (Rugae)
                 ctx.shadowColor = 'transparent'; ctx.strokeStyle = 'rgba(255,255,255,0.2)';
                 ctx.beginPath(); ctx.moveTo(ox + 15, oy - 10); ctx.quadraticCurveTo(ox + 25, oy, ox + 15, oy + 10); ctx.stroke();
                 ctx.beginPath(); ctx.moveTo(ox + 25, oy - 5); ctx.quadraticCurveTo(ox + 35, oy + 5, ox + 25, oy + 15); ctx.stroke();
                 
                 ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
 
-                // 4. Tuyến tụy (Pancreas)
-                const panGrad = ctx.createLinearGradient(ox, oy+18, ox+30, oy+18);
-                panGrad.addColorStop(0, '#fef08a'); panGrad.addColorStop(1, '#ca8a04');
-                ctx.fillStyle = panGrad; ctx.strokeStyle = '#a16207';
-                ctx.beginPath(); ctx.ellipse(ox + 15, oy + 18, 18, 6, 0.2, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+                const panGrad = ctx.createLinearGradient(ox, oy+18, ox+30, oy+18); panGrad.addColorStop(0, '#fef08a'); panGrad.addColorStop(1, '#ca8a04');
+                ctx.fillStyle = panGrad; ctx.strokeStyle = '#a16207'; ctx.beginPath(); ctx.ellipse(ox + 15, oy + 18, 18, 6, 0.2, 0, Math.PI*2); ctx.fill(); ctx.stroke();
 
-                // 5. Gan (Liver) - Gradient 3D sẫm màu
-                const liverGrad = ctx.createRadialGradient(ox-10, oy-15, 5, ox-10, oy-15, 45);
-                liverGrad.addColorStop(0, '#b91c1c'); liverGrad.addColorStop(1, '#450a0a');
+                const liverGrad = ctx.createRadialGradient(ox-10, oy-15, 5, ox-10, oy-15, 45); liverGrad.addColorStop(0, '#b91c1c'); liverGrad.addColorStop(1, '#450a0a');
                 ctx.fillStyle = liverGrad; ctx.strokeStyle = '#450a0a';
-                ctx.beginPath();
-                ctx.moveTo(ox + 10, oy - 25);
-                ctx.bezierCurveTo(ox - 10, oy - 40, ox - 45, oy - 25, ox - 45, oy);
-                ctx.bezierCurveTo(ox - 40, oy + 15, ox - 10, oy + 15, ox + 10, oy - 5);
-                ctx.bezierCurveTo(ox + 20, oy - 15, ox + 15, oy - 20, ox + 10, oy - 25);
-                ctx.fill(); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(ox + 10, oy - 25); ctx.bezierCurveTo(ox - 10, oy - 40, ox - 45, oy - 25, ox - 45, oy); ctx.bezierCurveTo(ox - 40, oy + 15, ox - 10, oy + 15, ox + 10, oy - 5); ctx.bezierCurveTo(ox + 20, oy - 15, ox + 15, oy - 20, ox + 10, oy - 25); ctx.fill(); ctx.stroke();
 
-                // Phân thùy gan (dòng kẻ nhẹ)
-                ctx.shadowColor = 'transparent';
-                ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+                ctx.shadowColor = 'transparent'; ctx.strokeStyle = 'rgba(0,0,0,0.3)';
                 ctx.beginPath(); ctx.moveTo(ox - 10, oy - 30); ctx.quadraticCurveTo(ox - 5, oy - 15, ox + 5, oy - 5); ctx.stroke();
                 ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
 
-                // 6. Túi mật (Gallbladder)
-                const gallGrad = ctx.createRadialGradient(ox-10, oy+12, 1, ox-10, oy+12, 6);
-                gallGrad.addColorStop(0, '#4ade80'); gallGrad.addColorStop(1, '#064e3b');
-                ctx.fillStyle = gallGrad; ctx.strokeStyle = '#022c22';
-                ctx.beginPath(); ctx.ellipse(ox - 10, oy + 12, 5, 8, -0.5, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+                const gallGrad = ctx.createRadialGradient(ox-10, oy+12, 1, ox-10, oy+12, 6); gallGrad.addColorStop(0, '#4ade80'); gallGrad.addColorStop(1, '#064e3b');
+                ctx.fillStyle = gallGrad; ctx.strokeStyle = '#022c22'; ctx.beginPath(); ctx.ellipse(ox - 10, oy + 12, 5, 8, -0.5, 0, Math.PI*2); ctx.fill(); ctx.stroke();
 
                 ctx.shadowColor = 'transparent';
 
-                // Tá tràng (Duodenum)
                 ctx.strokeStyle = '#f43f5e'; ctx.lineWidth = 7;
                 ctx.beginPath(); ctx.moveTo(ox + 20, oy + 20); ctx.quadraticCurveTo(ox + 5, oy + 30, ox - 10, oy + 25); ctx.stroke();
 
-                // 7. Đại tràng (Large Intestine)
                 ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
-                const colonGrad = ctx.createLinearGradient(ox-25, oy+35, ox+25, oy+85);
-                colonGrad.addColorStop(0, '#d97706'); colonGrad.addColorStop(1, '#92400e');
+                const colonGrad = ctx.createLinearGradient(ox-25, oy+35, ox+25, oy+85); colonGrad.addColorStop(0, '#d97706'); colonGrad.addColorStop(1, '#92400e');
                 ctx.strokeStyle = colonGrad; ctx.lineWidth = 16; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
-                ctx.beginPath();
-                ctx.moveTo(ox - 25, oy + 85); // Manh tràng
-                ctx.lineTo(ox - 25, oy + 35); // Lên
-                ctx.lineTo(ox + 25, oy + 35); // Ngang
-                ctx.lineTo(ox + 25, oy + 85); // Xuống
-                ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(ox - 25, oy + 85); ctx.lineTo(ox - 25, oy + 35); ctx.lineTo(ox + 25, oy + 35); ctx.lineTo(ox + 25, oy + 85); ctx.stroke();
                 
-                // Ngấn đại tràng (Haustra)
-                ctx.shadowColor = 'transparent';
-                ctx.strokeStyle = '#78350f'; ctx.lineWidth = 2;
-                for(let i=0; i<=50; i+=6) {
-                    ctx.beginPath(); ctx.moveTo(ox - 33, oy + 85 - i); ctx.lineTo(ox - 17, oy + 85 - i); ctx.stroke();
-                    ctx.beginPath(); ctx.moveTo(ox + 33, oy + 85 - i); ctx.lineTo(ox + 17, oy + 85 - i); ctx.stroke();
-                }
-                for(let i=0; i<=50; i+=6) {
-                    ctx.beginPath(); ctx.moveTo(ox - 25 + i, oy + 27); ctx.lineTo(ox - 25 + i, oy + 43); ctx.stroke();
-                }
+                ctx.shadowColor = 'transparent'; ctx.strokeStyle = '#78350f'; ctx.lineWidth = 2;
+                for(let i=0; i<=50; i+=6) { ctx.beginPath(); ctx.moveTo(ox - 33, oy + 85 - i); ctx.lineTo(ox - 17, oy + 85 - i); ctx.stroke(); ctx.beginPath(); ctx.moveTo(ox + 33, oy + 85 - i); ctx.lineTo(ox + 17, oy + 85 - i); ctx.stroke(); }
+                for(let i=0; i<=50; i+=6) { ctx.beginPath(); ctx.moveTo(ox - 25 + i, oy + 27); ctx.lineTo(ox - 25 + i, oy + 43); ctx.stroke(); }
 
-                // 8. Ruột non (Small Intestine)
                 ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
-                const smallGrad = ctx.createLinearGradient(ox-15, oy+25, ox+15, oy+85);
-                smallGrad.addColorStop(0, '#fca5a5'); smallGrad.addColorStop(1, '#e11d48');
+                const smallGrad = ctx.createLinearGradient(ox-15, oy+25, ox+15, oy+85); smallGrad.addColorStop(0, '#fca5a5'); smallGrad.addColorStop(1, '#e11d48');
                 ctx.strokeStyle = smallGrad; ctx.lineWidth = 12; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
-                
-                // Vẽ lòng vòng ruột non có phân cấp
-                const drawSI = (paths) => {
-                    paths.forEach(pts => {
-                        ctx.beginPath(); ctx.moveTo(pts[0], pts[1]);
-                        for(let i=2; i<pts.length; i+=2) ctx.lineTo(pts[i], pts[i+1]);
-                        ctx.stroke();
-                    });
-                };
-                drawSI([
-                    [ox - 10, oy + 25, ox + 15, oy + 45],
-                    [ox + 15, oy + 45, ox - 15, oy + 55],
-                    [ox - 15, oy + 55, ox + 15, oy + 65],
-                    [ox + 15, oy + 65, ox - 15, oy + 75],
-                    [ox - 15, oy + 75, ox + 10, oy + 85],
-                    [ox + 10, oy + 85, ox - 20, oy + 80]
-                ]);
+                const drawSI = (paths) => { paths.forEach(pts => { ctx.beginPath(); ctx.moveTo(pts[0], pts[1]); for(let i=2; i<pts.length; i+=2) ctx.lineTo(pts[i], pts[i+1]); ctx.stroke(); }); };
+                drawSI([ [ox - 10, oy + 25, ox + 15, oy + 45], [ox + 15, oy + 45, ox - 15, oy + 55], [ox - 15, oy + 55, ox + 15, oy + 65], [ox + 15, oy + 65, ox - 15, oy + 75], [ox - 15, oy + 75, ox + 10, oy + 85], [ox + 10, oy + 85, ox - 20, oy + 80] ]);
 
-                // 9. Ruột thừa (Appendix)
                 ctx.strokeStyle = '#b45309'; ctx.lineWidth = 6; ctx.lineCap = 'round';
                 ctx.beginPath(); ctx.moveTo(ox - 25, oy + 85); ctx.quadraticCurveTo(ox - 32, oy + 95, ox - 28, oy + 100); ctx.stroke();
 
-                // 10. Trực tràng / Hậu môn (Rectum/Anus)
                 ctx.strokeStyle = '#b45309'; ctx.lineWidth = 12; ctx.lineCap = 'round';
                 ctx.beginPath(); ctx.moveTo(ox + 25, oy + 85); ctx.quadraticCurveTo(ox + 5, oy + 95, ox + 10, oy + 115); ctx.stroke();
 
                 ctx.shadowColor = 'transparent';
 
-                // THỨC ĂN DI CHUYỂN
                 if (this.state.isEating) {
-                    const p = this.state.foodProgress;
-                    let fx = 0, fy = 0;
-                    // Lộ trình nội suy theo đúng đường ống
-                    if(p < 0.1) { fx = ox - 25 + p*10*30; fy = oy - 115; } 
-                    else if(p < 0.3) { fx = ox + 5; fy = oy - 115 + (p-0.1)*5*95; } 
-                    else if(p < 0.4) { fx = ox + 5 + Math.sin((p-0.3)*10*Math.PI)*15; fy = oy - 20 + (p-0.3)*10*40; } 
-                    else if(p < 0.7) { 
-                        let sp = (p-0.4)*3.33; 
-                        fx = ox + Math.sin(sp*Math.PI*5)*15;
-                        fy = oy + 25 + sp*55;
-                    } 
-                    else if(p < 0.9) {
-                        let lp = (p-0.7)*5; 
-                        if(lp < 0.33) { fx = ox - 25; fy = oy + 85 - lp*3*50; } 
-                        else if(lp < 0.66) { fx = ox - 25 + (lp-0.33)*3*50; fy = oy + 35; } 
-                        else { fx = ox + 25; fy = oy + 35 + (lp-0.66)*3*50; } 
-                    }
-                    else {
-                        let rp = (p-0.9)*10;
-                        fx = ox + 25 - rp*15; fy = oy + 85 + rp*30;
-                    }
-                    ctx.fillStyle = '#65a30d'; 
-                    ctx.beginPath(); ctx.arc(fx, fy, 6, 0, Math.PI*2); ctx.fill();
-                    ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.stroke();
+                    const p = this.state.foodProgress; let fx = 0, fy = 0;
+                    if(p < 0.1) { fx = ox - 25 + p*10*30; fy = oy - 115; } else if(p < 0.3) { fx = ox + 5; fy = oy - 115 + (p-0.1)*5*95; } else if(p < 0.4) { fx = ox + 5 + Math.sin((p-0.3)*10*Math.PI)*15; fy = oy - 20 + (p-0.3)*10*40; } else if(p < 0.7) { let sp = (p-0.4)*3.33; fx = ox + Math.sin(sp*Math.PI*5)*15; fy = oy + 25 + sp*55; } else if(p < 0.9) { let lp = (p-0.7)*5; if(lp < 0.33) { fx = ox - 25; fy = oy + 85 - lp*3*50; } else if(lp < 0.66) { fx = ox - 25 + (lp-0.33)*3*50; fy = oy + 35; } else { fx = ox + 25; fy = oy + 35 + (lp-0.66)*3*50; } } else { let rp = (p-0.9)*10; fx = ox + 25 - rp*15; fy = oy + 85 + rp*30; }
+                    ctx.fillStyle = '#65a30d'; ctx.beginPath(); ctx.arc(fx, fy, 6, 0, Math.PI*2); ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.stroke();
                 }
 
-                // VẼ NHÃN (LABELS)
                 if(this.state.showLabels && !this.state.selectedOrgan) {
-                    ctx.fillStyle = 'white'; ctx.font = '13px Inter'; ctx.strokeStyle = 'rgba(255,255,255,0.7)'; ctx.lineWidth = 1.5;
-                    ctx.shadowColor = 'black'; ctx.shadowBlur = 4;
-                    const drawLabel = (lx, ly, text, tx, ty) => {
-                        ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(tx, ty); ctx.stroke();
-                        let textW = ctx.measureText(text).width;
-                        ctx.fillText(text, tx + (tx>lx?5:-textW-5), ty + 4);
-                    };
-                    
-                    drawLabel(ox - 25, oy - 115, "Khoang miệng", ox - 90, oy - 125);
-                    drawLabel(ox + 15, oy - 125, "Tuyến nước bọt", ox + 80, oy - 130);
-                    drawLabel(ox + 5, oy - 60, "Thực quản", ox + 80, oy - 70);
-                    drawLabel(ox - 25, oy - 10, "Gan", ox - 100, oy - 20);
-                    drawLabel(ox + 30, oy, "Dạ dày", ox + 100, oy - 5);
-                    drawLabel(ox - 10, oy + 12, "Túi mật", ox - 100, oy + 10);
-                    drawLabel(ox + 15, oy + 18, "Tuyến tụy", ox + 100, oy + 25);
-                    drawLabel(ox - 25, oy + 50, "Đại tràng", ox - 110, oy + 50);
-                    drawLabel(ox + 15, oy + 50, "Ruột non", ox + 110, oy + 60);
-                    drawLabel(ox - 28, oy + 100, "Ruột thừa", ox - 100, oy + 110);
-                    drawLabel(ox, oy + 110, "Hậu môn", ox - 80, oy + 130);
-                    drawLabel(ox + 10, oy + 100, "Trực tràng", ox + 100, oy + 110);
-                    
+                    ctx.fillStyle = 'white'; ctx.font = '13px Inter'; ctx.strokeStyle = 'rgba(255,255,255,0.7)'; ctx.lineWidth = 1.5; ctx.shadowColor = 'black'; ctx.shadowBlur = 4;
+                    const drawLabel = (lx, ly, text, tx, ty) => { ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(tx, ty); ctx.stroke(); let textW = ctx.measureText(text).width; ctx.fillText(text, tx + (tx>lx?5:-textW-5), ty + 4); };
+                    drawLabel(ox - 25, oy - 115, "Khoang miệng", ox - 90, oy - 125); drawLabel(ox + 15, oy - 125, "Tuyến nước bọt", ox + 80, oy - 130); drawLabel(ox + 5, oy - 60, "Thực quản", ox + 80, oy - 70); drawLabel(ox - 25, oy - 10, "Gan", ox - 100, oy - 20); drawLabel(ox + 30, oy, "Dạ dày", ox + 100, oy - 5); drawLabel(ox - 10, oy + 12, "Túi mật", ox - 100, oy + 10); drawLabel(ox + 15, oy + 18, "Tuyến tụy", ox + 100, oy + 25); drawLabel(ox - 25, oy + 50, "Đại tràng", ox - 110, oy + 50); drawLabel(ox + 15, oy + 50, "Ruột non", ox + 110, oy + 60); drawLabel(ox - 28, oy + 100, "Ruột thừa", ox - 100, oy + 110); drawLabel(ox, oy + 110, "Hậu môn", ox - 80, oy + 130); drawLabel(ox + 10, oy + 100, "Trực tràng", ox + 100, oy + 110);
                     ctx.shadowBlur = 0;
                 }
 
                 ctx.restore(); 
                 
-                // HIỂN THỊ MODAL BẢNG CHI TIẾT
                 if(this.state.selectedOrgan) {
                     ctx.fillStyle = 'rgba(15, 23, 42, 0.75)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-                    const modalW = Math.min(450, canvas.width - 40); const modalH = 220;
-                    const mx = canvas.width/2 - modalW/2; const my = canvas.height/2 - modalH/2;
+                    const modalW = Math.min(450, canvas.width - 40); const modalH = 220; const mx = canvas.width/2 - modalW/2; const my = canvas.height/2 - modalH/2;
+                    ctx.fillStyle = '#1e293b'; ctx.beginPath(); ctx.roundRect(mx, my, modalW, modalH, 16); ctx.fill(); ctx.strokeStyle = '#4ade80'; ctx.lineWidth = 2; ctx.stroke();
                     
-                    ctx.fillStyle = '#1e293b'; ctx.beginPath(); ctx.roundRect(mx, my, modalW, modalH, 16); ctx.fill();
-                    ctx.strokeStyle = '#4ade80'; ctx.lineWidth = 2; ctx.stroke();
-                    
-                    const details = {
-                        mouth: { n: "Khoang Miệng & Lưỡi", d: "Nơi bắt đầu của ống tiêu hóa. Thực hiện tiêu hóa cơ học (nhai, nghiền) và hóa học ban đầu nhờ amylase." },
-                        salivary: { n: "Tuyến Nước Bọt", d: "Tiết ra nước bọt làm mềm thức ăn, chứa enzyme phân giải tinh bột." },
-                        esophagus: { n: "Thực Quản", d: "Ống cơ dẫn thức ăn từ họng xuống dạ dày nhờ các luồng sóng nhu động trơn tru." },
-                        liver: { n: "Gan", d: "Nhà máy hóa chất của cơ thể. Sản xuất dịch mật tiêu hóa mỡ, khử độc, và dự trữ Glycogen." },
-                        stomach: { n: "Dạ Dày", d: "Túi cơ nhào trộn thức ăn. Tiết axit HCl và pepsin để tiêu diệt khuẩn và cắt đứt chuỗi protein." },
-                        gallbladder: { n: "Túi Mật", d: "Dự trữ và cô đặc dịch mật từ gan, co bóp đẩy mật vào tá tràng khi có thức ăn chứa mỡ." },
-                        pancreas: { n: "Tuyến Tụy", d: "Tiết dịch tụy chứa dồi dào enzyme (lipase, protease, amylase) đổ vào ruột non để tiêu hóa." },
-                        smallIntestine: { n: "Ruột Non & Tá Tràng", d: "Nơi tiêu hóa hóa học triệt để nhất. Các lông ruột hấp thụ tối đa chất dinh dưỡng vào máu." },
-                        largeIntestine: { n: "Đại Tràng (Ruột Già)", d: "Hấp thụ lại nước và khoáng chất. Các vi khuẩn cộng sinh lên men tạo phân." },
-                        rectum: { n: "Trực Tràng & Hậu Môn", d: "Phần cuối cùng, lưu trữ phân và thực hiện phản xạ đẩy chất thải ra ngoài." },
-                        appendix: { n: "Ruột Thừa", d: "Một túi tịt nhỏ ở manh tràng. Đóng vai trò như nơi trú ẩn của lợi khuẩn đường ruột." }
-                    };
+                    const details = { mouth: { n: "Khoang Miệng & Lưỡi", d: "Nơi bắt đầu của ống tiêu hóa. Thực hiện tiêu hóa cơ học (nhai, nghiền) và hóa học ban đầu nhờ amylase." }, salivary: { n: "Tuyến Nước Bọt", d: "Tiết ra nước bọt làm mềm thức ăn, chứa enzyme phân giải tinh bột." }, esophagus: { n: "Thực Quản", d: "Ống cơ dẫn thức ăn từ họng xuống dạ dày nhờ các luồng sóng nhu động trơn tru." }, liver: { n: "Gan", d: "Nhà máy hóa chất của cơ thể. Sản xuất dịch mật tiêu hóa mỡ, khử độc, và dự trữ Glycogen." }, stomach: { n: "Dạ Dày", d: "Túi cơ nhào trộn thức ăn. Tiết axit HCl và pepsin để tiêu diệt khuẩn và cắt đứt chuỗi protein." }, gallbladder: { n: "Túi Mật", d: "Dự trữ và cô đặc dịch mật từ gan, co bóp đẩy mật vào tá tràng khi có thức ăn chứa mỡ." }, pancreas: { n: "Tuyến Tụy", d: "Tiết dịch tụy chứa dồi dào enzyme (lipase, protease, amylase) đổ vào ruột non để tiêu hóa." }, smallIntestine: { n: "Ruột Non & Tá Tràng", d: "Nơi tiêu hóa hóa học triệt để nhất. Các lông ruột hấp thụ tối đa chất dinh dưỡng vào máu." }, largeIntestine: { n: "Đại Tràng (Ruột Già)", d: "Hấp thụ lại nước và khoáng chất. Các vi khuẩn cộng sinh lên men tạo phân." }, rectum: { n: "Trực Tràng & Hậu Môn", d: "Phần cuối cùng, lưu trữ phân và thực hiện phản xạ đẩy chất thải ra ngoài." }, appendix: { n: "Ruột Thừa", d: "Một túi tịt nhỏ ở manh tràng. Đóng vai trò như nơi trú ẩn của lợi khuẩn đường ruột." } };
                     const info = details[this.state.selectedOrgan];
                     
-                    ctx.fillStyle = '#4ade80'; ctx.font = 'bold 22px Inter'; ctx.textAlign = 'center';
-                    ctx.fillText(info.n, canvas.width/2, my + 50);
-                    
+                    ctx.fillStyle = '#4ade80'; ctx.font = 'bold 22px Inter'; ctx.textAlign = 'center'; ctx.fillText(info.n, canvas.width/2, my + 50);
                     ctx.fillStyle = '#e2e8f0'; ctx.font = '15px Inter'; ctx.textAlign = 'left';
-                    const wrapText = (text, x, y, maxW, lineH) => {
-                        let words = text.split(' '); let line = '';
-                        for(let n = 0; n < words.length; n++) {
-                            let testLine = line + words[n] + ' ';
-                            if (ctx.measureText(testLine).width > maxW && n > 0) { ctx.fillText(line, x, y); line = words[n] + ' '; y += lineH; } 
-                            else { line = testLine; }
-                        }
-                        ctx.fillText(line, x, y);
-                    };
+                    const wrapText = (text, x, y, maxW, lineH) => { let words = text.split(' '); let line = ''; for(let n = 0; n < words.length; n++) { let testLine = line + words[n] + ' '; if (ctx.measureText(testLine).width > maxW && n > 0) { ctx.fillText(line, x, y); line = words[n] + ' '; y += lineH; } else { line = testLine; } } ctx.fillText(line, x, y); };
                     wrapText(info.d, mx + 30, my + 90, modalW - 60, 24);
-                    
-                    ctx.fillStyle = '#94a3b8'; ctx.font = 'italic 13px Inter'; ctx.textAlign = 'center';
-                    ctx.fillText("Click bất kỳ đâu để đóng", canvas.width/2, my + modalH - 20);
+                    ctx.fillStyle = '#94a3b8'; ctx.font = 'italic 13px Inter'; ctx.textAlign = 'center'; ctx.fillText("Click bất kỳ đâu để đóng", canvas.width/2, my + modalH - 20);
                 }
             },
             loop() { if(currentSim !== 'digestive') return; this.update(); this.draw(); animationId = requestAnimationFrame(() => this.loop()); }
@@ -1312,7 +1377,6 @@
                 ctx.save();
                 ctx.translate(ox, oy); ctx.scale(scale, scale); ctx.translate(-ox, -oy);
 
-                // 1. Tế bào chất & Màng (Gradient Cầu)
                 const cellR = 180;
                 const gradCell = ctx.createRadialGradient(ox - 50, oy - 50, 50, ox, oy, cellR);
                 gradCell.addColorStop(0, '#ffedd5'); gradCell.addColorStop(1, '#fdba74');
@@ -1327,7 +1391,6 @@
                 ctx.fill();
                 ctx.shadowColor = 'transparent';
                 
-                // Hạt Texture trong màng chất
                 ctx.fillStyle = 'rgba(194, 65, 12, 0.1)';
                 for(let i=0; i<150; i++) {
                     ctx.beginPath(); ctx.arc(ox + Math.sin(i*9)*140, oy + Math.cos(i*13)*140, Math.random()*3+1, 0, Math.PI*2); ctx.fill();
@@ -1335,7 +1398,6 @@
 
                 ctx.lineWidth = 6; ctx.strokeStyle = '#ea580c'; ctx.stroke();
 
-                // 2. Nhân tế bào (Gradient Tím bóng)
                 const nucX = ox - 20; const nucY = oy - 30 + wobble;
                 const nucGrad = ctx.createRadialGradient(nucX-15, nucY-15, 10, nucX, nucY, 60);
                 nucGrad.addColorStop(0, '#d8b4fe'); nucGrad.addColorStop(1, '#7e22ce');
@@ -1346,29 +1408,23 @@
                 ctx.shadowColor = 'transparent';
                 ctx.lineWidth = 4; ctx.strokeStyle = '#4c1d95'; ctx.setLineDash([12, 6]); ctx.stroke(); ctx.setLineDash([]);
                 
-                // Sợi Chromatin trong nhân
                 ctx.fillStyle = 'rgba(255,255,255,0.2)';
                 for(let i=0; i<30; i++) {
                     ctx.beginPath(); ctx.arc(nucX + Math.sin(i*11)*45, nucY + Math.cos(i*7)*45, Math.random()*2, 0, Math.PI*2); ctx.fill();
                 }
 
-                // Nhãn con
                 ctx.fillStyle = '#4c1d95';
                 ctx.beginPath(); ctx.arc(nucX + 15, nucY + 10, 20, 0, Math.PI*2); ctx.fill();
 
-                // 3. Lưới nội chất
                 this.drawER(nucX, nucY, true); 
                 ctx.save(); ctx.translate(nucX+80, nucY+60); ctx.rotate(-0.8); this.drawER(0,0, false); ctx.restore();
 
-                // 4. Thể Golgi
                 this.drawGolgi(ox + 90, oy - 20 - wobble*0.5, 0.5);
 
-                // 5. Ty thể
                 this.drawMito(ox - 60, oy + 80 + wobble, -0.2, 1.2);
                 this.drawMito(ox + 80, oy + 100 - wobble, 0.8, 1);
                 this.drawMito(ox + 10, oy - 120 + wobble*0.8, -1.0, 0.9);
 
-                // 6. Lysosome
                 ctx.strokeStyle = '#c2410c'; ctx.lineWidth=2;
                 ctx.shadowColor = 'rgba(0,0,0,0.2)'; ctx.shadowBlur = 5;
                 const lysos = [[ox-100, oy-20], [ox+40, oy+120], [ox-40, oy+140]];
@@ -1380,18 +1436,15 @@
                 });
                 ctx.shadowColor = 'transparent';
 
-                // 7. Trung thể
                 ctx.save(); ctx.translate(ox + 120, oy + 30); ctx.fillStyle = '#facc15';
                 ctx.fillRect(-10, -4, 20, 8); ctx.save(); ctx.rotate(Math.PI/2); ctx.fillRect(-10, -4, 20, 8); ctx.restore();
                 ctx.restore();
 
-                // Ribosome tự do
                 ctx.fillStyle = '#ef4444';
                 for(let i=0; i<25; i++) {
                     ctx.beginPath(); ctx.arc(ox - 120 + (i*17)%200, oy - 80 + (i*23)%220, 2.5, 0, Math.PI*2); ctx.fill();
                 }
 
-                // Vẽ chú thích
                 if(this.state.showLabels) {
                     ctx.fillStyle = 'white'; ctx.font = '13px Inter'; ctx.strokeStyle = 'rgba(255,255,255,0.7)'; ctx.lineWidth = 1.5;
                     ctx.shadowColor = 'black'; ctx.shadowBlur = 4;
@@ -1414,15 +1467,14 @@
                     ctx.shadowBlur = 0;
                 }
                 
-                ctx.restore(); // Khôi phục scale
+                ctx.restore(); 
 
-                // HIỂN THỊ MODAL BẢNG CHI TIẾT
                 if(this.state.selectedOrganelle) {
-                    ctx.fillStyle = 'rgba(15, 23, 42, 0.75)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.fillStyle = 'rgba(28, 25, 23, 0.8)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
                     const modalW = Math.min(450, canvas.width - 40); const modalH = 270;
                     const mx = canvas.width/2 - modalW/2; const my = canvas.height/2 - modalH/2;
                     
-                    ctx.fillStyle = '#1e293b'; ctx.beginPath(); ctx.roundRect(mx, my, modalW, modalH, 16); ctx.fill();
+                    ctx.fillStyle = '#1c1917'; ctx.beginPath(); ctx.roundRect(mx, my, modalW, modalH, 16); ctx.fill();
                     ctx.strokeStyle = '#4ade80'; ctx.lineWidth = 2; ctx.stroke();
                     
                     const details = {
@@ -1456,7 +1508,7 @@
                     ctx.fillStyle = '#4ade80'; ctx.font = 'bold 20px Inter'; ctx.textAlign = 'center';
                     ctx.fillText(info.n, canvas.width/2, my + 140);
                     
-                    ctx.fillStyle = '#e2e8f0'; ctx.font = '14px Inter'; ctx.textAlign = 'left';
+                    ctx.fillStyle = '#d6d3d1'; ctx.font = '14px Inter'; ctx.textAlign = 'left';
                     const wrapText = (text, x, y, maxW, lineH) => {
                         let words = text.split(' '); let line = '';
                         for(let n = 0; n < words.length; n++) {
@@ -1468,7 +1520,7 @@
                     };
                     wrapText(info.d, mx + 30, my + 175, modalW - 60, 22);
                     
-                    ctx.fillStyle = '#94a3b8'; ctx.font = 'italic 12px Inter'; ctx.textAlign = 'center';
+                    ctx.fillStyle = '#a8a29e'; ctx.font = 'italic 12px Inter'; ctx.textAlign = 'center';
                     ctx.fillText("Click bất kỳ đâu để đóng", canvas.width/2, my + modalH - 15);
                 }
             },
@@ -1480,9 +1532,8 @@
         // ==========================================
         function buildControls(simName) {
             let html = '';
-            const themeClass = currentDomain === 'physics' ? 'text-accent-400' : (currentDomain === 'chemistry' ? 'text-chem-400' : 'text-bio-400');
-            const btnClass = currentDomain === 'physics' ? 'bg-accent-600 hover:bg-accent-500' : (currentDomain === 'chemistry' ? 'bg-chem-600 hover:bg-chem-500' : 'bg-bio-600 hover:bg-bio-500');
-            const shadowClass = currentDomain === 'physics' ? 'shadow-[0_0_15px_rgba(2,132,199,0.5)]' : (currentDomain === 'chemistry' ? 'shadow-[0_0_15px_rgba(219,39,119,0.5)]' : 'shadow-[0_0_15px_rgba(22,163,74,0.5)]');
+            const themeClass = currentDomain === 'physics' ? 'text-sky-400' : (currentDomain === 'chemistry' ? 'text-pink-400' : 'text-emerald-400');
+            const btnClass = currentDomain === 'physics' ? 'bg-sky-600 hover:bg-sky-500' : (currentDomain === 'chemistry' ? 'bg-pink-600 hover:bg-pink-500' : 'bg-emerald-600 hover:bg-emerald-500');
 
             if (currentDomain === 'physics') {
                 html += `
@@ -1499,7 +1550,7 @@
                             ${createSlider('proj-angle', 'Góc bắn', 0, 90, 1, simulations.projectile.state.angle, '°', 'updateProjAngle')}
                             ${createSlider('proj-vel', 'Vận tốc', 1, 50, 1, simulations.projectile.state.velocity, ' m/s', 'updateProjVel')}
                         </div>
-                        <button onclick="simulations.projectile.fire()" class="w-full py-3 ${btnClass} text-white rounded-xl font-bold ${shadowClass} transition-all active:scale-95 text-lg">
+                        <button onclick="simulations.projectile.fire()" class="w-full py-3 ${btnClass} text-white rounded-xl font-bold transition-all active:scale-95 text-sm mt-4">
                             <i class="fa-solid fa-fire mr-2"></i> BẮN!
                         </button>`;
                 } else if (simName === 'pendulum') {
@@ -1541,26 +1592,49 @@
                 }
             } 
             else if (currentDomain === 'chemistry') {
-                if (simName === 'titration') {
+                if (simName === 'states') {
+                    html += `
+                        <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-4 shadow-lg">
+                            <h3 class="text-white font-semibold text-sm mb-3 flex items-center gap-2"><i class="fa-solid fa-temperature-half ${themeClass}"></i> Trạng thái (Oxygen - O₂)</h3>
+                            <div class="grid grid-cols-1 gap-2">
+                                <button onclick="simulations.states.setPhase(-230)" class="w-full py-2 bg-blue-700 hover:bg-blue-600 text-white rounded-lg font-bold shadow-sm transition-all active:scale-95 text-xs flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-icicles"></i> Thể Rắn (-230°C)
+                                </button>
+                                <button onclick="simulations.states.setPhase(-183)" class="w-full py-2 bg-sky-500 hover:bg-sky-400 text-white rounded-lg font-bold shadow-sm transition-all active:scale-95 text-xs flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-droplet"></i> Thể Lỏng (-183°C)
+                                </button>
+                                <button onclick="simulations.states.setPhase(25)" class="w-full py-2 bg-slate-300 hover:bg-slate-200 text-slate-800 rounded-lg font-bold shadow-sm transition-all active:scale-95 text-xs flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-cloud"></i> Thể Khí (25°C)
+                                </button>
+                            </div>
+                            <div class="flex items-center justify-between mt-4 border-t border-slate-700 pt-4">
+                                <span class="text-sm text-slate-300 font-medium">Góc nhìn vĩ mô</span>
+                                <button onclick="simulations.states.toggleMacro()" id="btn-states-macro" class="w-10 h-5 rounded-full ${simulations.states.state.isMacro ? 'bg-pink-500' : 'bg-slate-600'} relative transition-colors duration-300 focus:outline-none">
+                                    <div class="w-3 h-3 rounded-full bg-white absolute top-1 transition-transform duration-300 ${simulations.states.state.isMacro ? 'translate-x-6' : 'translate-x-1'}"></div>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                } else if (simName === 'titration') {
                     html += `
                         <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-4 shadow-lg">
                             <h3 class="text-white font-semibold text-sm mb-3 flex items-center gap-2"><i class="fa-solid fa-vial ${themeClass}"></i> Thuốc thử & Chất chỉ thị</h3>
                             <div class="flex gap-2 mb-3">
-                                <button onclick="simulations.titration.dipLitmus()" class="flex-1 py-2 bg-purple-500 hover:bg-purple-400 text-white rounded-lg font-bold shadow-[0_0_10px_rgba(168,85,247,0.5)] transition-all active:scale-95 text-xs">
+                                <button onclick="simulations.titration.dipLitmus()" class="flex-1 py-2 bg-purple-500 hover:bg-purple-400 text-white rounded-lg font-bold shadow-sm transition-all active:scale-95 text-xs">
                                     <i class="fa-solid fa-scroll"></i> Nhúng Quỳ Tím
                                 </button>
                             </div>
                             ${createSlider('chem-acid', 'Độ mạnh Axit (HCl, H2SO4)', 0.1, 3.0, 0.1, simulations.titration.state.acidStrength, '', 'updateChemAcid', colors.chem)}
                             ${createSlider('chem-base', 'Độ mạnh Bazơ (NaOH, KOH)', 0.1, 3.0, 0.1, simulations.titration.state.baseStrength, '', 'updateChemBase', colors.chem)}
                         </div>
-                        <div class="flex gap-2">
-                            <button onclick="simulations.titration.addDrop('acid')" class="flex-1 py-3 bg-red-500 hover:bg-red-400 text-white rounded-xl font-bold shadow-[0_0_10px_rgba(239,68,68,0.5)] transition-all active:scale-95 text-xs px-1">
+                        <div class="flex gap-2 mt-4">
+                            <button onclick="simulations.titration.addDrop('acid')" class="flex-1 py-2 bg-red-500 hover:bg-red-400 text-white rounded-lg font-bold transition-all active:scale-95 text-xs px-1">
                                 <i class="fa-solid fa-tint"></i> Axit
                             </button>
-                            <button onclick="simulations.titration.addDrop('water')" class="flex-1 py-3 bg-slate-400 hover:bg-slate-300 text-white rounded-xl font-bold shadow-[0_0_10px_rgba(148,163,184,0.5)] transition-all active:scale-95 text-xs px-1">
+                            <button onclick="simulations.titration.addDrop('water')" class="flex-1 py-2 bg-slate-400 hover:bg-slate-300 text-white rounded-lg font-bold transition-all active:scale-95 text-xs px-1">
                                 <i class="fa-solid fa-droplet"></i> Nước cất
                             </button>
-                            <button onclick="simulations.titration.addDrop('base')" class="flex-1 py-3 bg-blue-500 hover:bg-blue-400 text-white rounded-xl font-bold shadow-[0_0_10px_rgba(59,130,246,0.5)] transition-all active:scale-95 text-xs px-1">
+                            <button onclick="simulations.titration.addDrop('base')" class="flex-1 py-2 bg-blue-500 hover:bg-blue-400 text-white rounded-lg font-bold transition-all active:scale-95 text-xs px-1">
                                 <i class="fa-solid fa-tint"></i> Bazơ
                             </button>
                         </div>
@@ -1570,15 +1644,15 @@
                         <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-4 shadow-lg">
                             <h3 class="text-white font-semibold text-sm mb-3 flex items-center gap-2"><i class="fa-solid fa-fire ${themeClass}"></i> Chọn Phản Ứng</h3>
                             
-                            <button onclick="simulations.reactions.trigger('mg_o2')" class="w-full py-2 bg-yellow-500 hover:bg-yellow-400 text-slate-900 rounded-lg font-bold shadow-lg transition-all active:scale-95 text-sm flex items-center justify-center gap-2">
+                            <button onclick="simulations.reactions.trigger('mg_o2')" class="w-full py-2 bg-yellow-500 hover:bg-yellow-400 text-slate-900 rounded-lg font-bold shadow-sm transition-all active:scale-95 text-xs flex items-center justify-center gap-2">
                                 <i class="fa-solid fa-bolt"></i> Đốt dây Magie (Mg + O₂)
                             </button>
                             
-                            <button onclick="simulations.reactions.trigger('zn_hcl')" class="w-full py-2 bg-emerald-500 hover:bg-emerald-400 text-white rounded-lg font-bold shadow-lg transition-all active:scale-95 text-sm flex items-center justify-center gap-2">
+                            <button onclick="simulations.reactions.trigger('zn_hcl')" class="w-full py-2 bg-emerald-500 hover:bg-emerald-400 text-white rounded-lg font-bold shadow-sm transition-all active:scale-95 text-xs flex items-center justify-center gap-2">
                                 <i class="fa-solid fa-bubbles"></i> Kẽm & Axit HCl (Zn + HCl)
                             </button>
 
-                            <button onclick="simulations.reactions.trigger('cuso4_naoh')" class="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-bold shadow-lg transition-all active:scale-95 text-sm flex items-center justify-center gap-2">
+                            <button onclick="simulations.reactions.trigger('cuso4_naoh')" class="w-full py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-bold shadow-sm transition-all active:scale-95 text-xs flex items-center justify-center gap-2">
                                 <i class="fa-solid fa-flask"></i> Tạo kết tủa (CuSO₄ + NaOH)
                             </button>
                         </div>
@@ -1590,13 +1664,13 @@
                     html += `
                         <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-4 shadow-lg">
                             <h3 class="text-white font-semibold text-sm mb-3 flex items-center gap-2"><i class="fa-solid fa-person-dots-from-line ${themeClass}"></i> Quá trình</h3>
-                            <button onclick="simulations.digestive.eat()" class="w-full py-3 bg-bio-600 hover:bg-bio-500 text-white rounded-xl font-bold shadow-[0_0_15px_rgba(22,163,74,0.5)] transition-all active:scale-95 text-sm mb-4">
+                            <button onclick="simulations.digestive.eat()" class="w-full py-2.5 ${btnClass} text-white rounded-lg font-bold transition-all active:scale-95 text-xs mb-4">
                                 <i class="fa-solid fa-cookie-bite mr-2"></i> Nuốt Thức Ăn
                             </button>
                             <div class="flex items-center justify-between mt-4 border-t border-slate-700 pt-4">
                                 <span class="text-sm text-slate-300 font-medium">Hiển thị chú thích</span>
-                                <button onclick="simulations.digestive.toggleLabels()" id="btn-dig-labels" class="w-12 h-6 rounded-full ${simulations.digestive.state.showLabels ? 'bg-bio-500' : 'bg-slate-600'} relative transition-colors duration-300 focus:outline-none">
-                                    <div class="w-4 h-4 rounded-full bg-white absolute top-1 transition-transform duration-300 ${simulations.digestive.state.showLabels ? 'translate-x-7' : 'translate-x-1'}"></div>
+                                <button onclick="simulations.digestive.toggleLabels()" id="btn-dig-labels" class="w-10 h-5 rounded-full ${simulations.digestive.state.showLabels ? 'bg-emerald-500' : 'bg-slate-600'} relative transition-colors duration-300 focus:outline-none">
+                                    <div class="w-3 h-3 rounded-full bg-white absolute top-1 transition-transform duration-300 ${simulations.digestive.state.showLabels ? 'translate-x-6' : 'translate-x-1'}"></div>
                                 </button>
                             </div>
                         </div>
@@ -1608,8 +1682,8 @@
                             ${createSlider('cell-act', 'Mức độ hoạt động', 0.1, 5.0, 0.1, simulations.cell.state.activity, 'x', 'updateCellAct', colors.bio)}
                             <div class="flex items-center justify-between mt-4 border-t border-slate-700 pt-4">
                                 <span class="text-sm text-slate-300 font-medium">Hiển thị chú thích</span>
-                                <button onclick="simulations.cell.toggleLabels()" id="btn-cell-labels" class="w-12 h-6 rounded-full ${simulations.cell.state.showLabels ? 'bg-bio-500' : 'bg-slate-600'} relative transition-colors duration-300 focus:outline-none">
-                                    <div class="w-4 h-4 rounded-full bg-white absolute top-1 transition-transform duration-300 ${simulations.cell.state.showLabels ? 'translate-x-7' : 'translate-x-1'}"></div>
+                                <button onclick="simulations.cell.toggleLabels()" id="btn-cell-labels" class="w-10 h-5 rounded-full ${simulations.cell.state.showLabels ? 'bg-emerald-500' : 'bg-slate-600'} relative transition-colors duration-300 focus:outline-none">
+                                    <div class="w-3 h-3 rounded-full bg-white absolute top-1 transition-transform duration-300 ${simulations.cell.state.showLabels ? 'translate-x-6' : 'translate-x-1'}"></div>
                                 </button>
                             </div>
                         </div>
