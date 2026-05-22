@@ -292,7 +292,9 @@
                 { id: 'reactions', icon: 'fa-fire-flame-curved', name: 'Phản Ứng Hóa Học' }
             ],
             biology: [
-                { id: 'digestive', icon: 'fa-person-dots-from-line', name: 'Hệ Tiêu Hóa' }, { id: 'cell', icon: 'fa-microscope', name: 'Tế Bào' }
+                { id: 'digestive', icon: 'fa-person-dots-from-line', name: 'Hệ Tiêu Hóa' }, 
+                { id: 'cell', icon: 'fa-microscope', name: 'Tế Bào' },
+                { id: 'bacteria', icon: 'fa-bacterium', name: 'Vi Khuẩn' }
             ]
         };
 
@@ -2112,6 +2114,331 @@
         };
 
         // ==========================================
+        // BIOLOGY SIMULATION: VI KHUẨN (BACTERIA)
+        // ==========================================
+        simulations.bacteria = {
+            state: { activity: 1.0, showLabels: true, selectedOrganelle: null, labelHits: [], bx: 0, by: 0, bAngle: 0 },
+            origin: { x: 0, y: 0 },
+            initPositions() { this.origin.x = canvas.width / 2; this.origin.y = canvas.height / 2; },
+            init() { 
+                this.initPositions(); 
+                this.reset(); 
+                this.setupInteraction(); 
+                this.loop(); 
+            },
+            reset() { 
+                this.state.activity = 1.0; 
+                this.state.showLabels = true; 
+                this.state.selectedOrganelle = null; 
+                this.state.bx = 0; 
+                this.state.by = 0; 
+                this.state.bAngle = 0;
+                document.getElementById('bacteria-act-val') && (document.getElementById('bacteria-act').value = 1.0); 
+            },
+            setupInteraction() {
+                canvas.onmousedown = (e) => {
+                    if(currentSim !== 'bacteria') return;
+                    if(this.state.selectedOrganelle) { this.state.selectedOrganelle = null; return; }
+                    
+                    const r = canvas.getBoundingClientRect();
+                    const cx = e.clientX - r.left; const cy = e.clientY - r.top;
+                    
+                    let minDim = Math.min(canvas.width, canvas.height);
+                    let scale = minDim < 600 ? minDim / 600 : 1;
+
+                    // 1. Kiểm tra click vào Nhãn chữ
+                    if (this.state.showLabels && this.state.labelHits) {
+                        let unX = (cx - this.origin.x) / scale;
+                        let unY = (cy - this.origin.y) / scale;
+                        for (let l of this.state.labelHits) {
+                            if (Math.abs(unX - l.x) < l.w/2 && Math.abs(unY - l.y) < l.h/2) {
+                                this.state.selectedOrganelle = l.id;
+                                return;
+                            }
+                        }
+                    }
+
+                    // 2. Chuyển đổi tọa độ chuột sang tọa độ cục bộ của vi khuẩn đang xoay
+                    let dx = (cx - this.origin.x) / scale - this.state.bx;
+                    let dy = (cy - this.origin.y) / scale - this.state.by;
+                    let angle = -this.state.bAngle;
+                    let localX = dx * Math.cos(angle) - dy * Math.sin(angle);
+                    let localY = dx * Math.sin(angle) + dy * Math.cos(angle);
+
+                    // Danh sách hitbox dựa trên tâm vi khuẩn (0,0) nằm ngang
+                    const bacHits = [
+                        { id: 'flagella', x: 200, y: 0, r: 80 },
+                        { id: 'pili', x: 0, y: -80, r: 40 }, { id: 'pili', x: 0, y: 80, r: 40 },
+                        { id: 'nucleoid', x: 0, y: 0, r: 50 },
+                        { id: 'plasmid', x: 80, y: 25, r: 20 }, { id: 'plasmid', x: -90, y: -20, r: 20 },
+                        { id: 'ribosome', x: -60, y: 25, r: 25 }, { id: 'ribosome', x: 60, y: -25, r: 25 },
+                        { id: 'cytoplasm', x: 0, y: 0, r: 70 },
+                        { id: 'membrane', x: -120, y: 0, r: 65 }, { id: 'membrane', x: 120, y: 0, r: 65 },
+                        { id: 'cellwall', x: -130, y: 0, r: 75 }, { id: 'cellwall', x: 130, y: 0, r: 75 },
+                        { id: 'capsule', x: -140, y: 0, r: 85 }, { id: 'capsule', x: 140, y: 0, r: 85 }
+                    ];
+
+                    for (let h of bacHits) {
+                        if (Math.hypot(localX - h.x, localY - h.y) < h.r) { 
+                            this.state.selectedOrganelle = h.id; 
+                            return;
+                        }
+                    }
+                };
+            },
+            toggleLabels() {
+                this.state.showLabels = !this.state.showLabels;
+                const btn = document.getElementById('btn-bac-labels');
+                if(btn) {
+                    btn.className = `w-10 h-5 rounded-full ${this.state.showLabels ? 'bg-emerald-500' : 'bg-slate-600'} relative transition-colors duration-300 focus:outline-none`;
+                    btn.children[0].className = `w-3 h-3 rounded-full bg-white absolute top-1 transition-transform duration-300 ${this.state.showLabels ? 'translate-x-6' : 'translate-x-1'}`;
+                }
+            },
+            update() {
+                if(!isPaused && !this.state.selectedOrganelle) {
+                    globalTime += timeScale * this.state.activity;
+                    
+                    // Logic bơi lượn của vi khuẩn
+                    let speed = 0.5 * this.state.activity * timeScale;
+                    this.state.bx -= Math.cos(this.state.bAngle) * speed; // Bơi về phía đầu (x âm)
+                    this.state.by -= Math.sin(this.state.bAngle) * speed;
+                    
+                    // Lắc lư ngẫu nhiên mềm mại
+                    this.state.bAngle += (Math.sin(globalTime * 0.02) * 0.008 + (Math.random() - 0.5) * 0.015) * this.state.activity;
+
+                    // Giới hạn bơi trong màn hình
+                    let maxDist = 200;
+                    if(Math.hypot(this.state.bx, this.state.by) > maxDist) {
+                        let targetAngle = Math.atan2(-this.state.by, -this.state.bx);
+                        this.state.bAngle += (targetAngle - this.state.bAngle) * 0.03;
+                    }
+                }
+                
+                hudInfo.innerHTML = `
+                    <div class="text-bio-400 font-bold mb-1"><i class="fa-solid fa-bacterium"></i> Vi mô: Tế Bào Vi Khuẩn (Nhân sơ)</div>
+                    <div class="text-xs text-slate-300 mb-2 italic animate-pulse">👉 Click vào các bào quan hoặc chữ chú thích</div>
+                    <div>Vùng nhân: <span class="text-white">Không có màng bao bọc</span></div>
+                    <div>Thành tế bào: <span class="text-white">Cấu tạo từ Peptidoglycan</span></div>
+                    <div>Kích thước: <span class="text-white">Nhỏ hơn tế bào nhân thực 10 lần</span></div>
+                `;
+            },
+            draw() {
+                ctx.clearRect(0,0,canvas.width,canvas.height);
+                const minDim = Math.min(canvas.width, canvas.height);
+                const scale = minDim < 600 ? minDim / 600 : 1.1; // Phóng to nhẹ để xem rõ chi tiết
+                
+                ctx.save();
+                ctx.translate(this.origin.x, this.origin.y); 
+                ctx.scale(scale, scale); 
+
+                // Vẽ Vi Khuẩn
+                ctx.save();
+                ctx.translate(this.state.bx, this.state.by);
+                ctx.rotate(this.state.bAngle);
+
+                let act = this.state.activity * (isPaused || this.state.selectedOrganelle ? 0 : 1);
+                
+                // --- 1. LÔNG NHUNG (Pili) ---
+                ctx.strokeStyle = '#6ee7b7'; ctx.lineCap = 'round';
+                for(let a=0; a<Math.PI*2; a+=0.15) {
+                    // Tránh vẽ lông ở đuôi có Roi
+                    if(a > -0.3 && a < 0.3) continue; 
+                    
+                    let rX = 160; let rY = 65;
+                    let ex = rX * Math.cos(a); let ey = rY * Math.sin(a);
+
+                    // Xử lý góc xoắn của lông
+                    let wiggle = Math.sin(globalTime*0.1*act + a*15)*8;
+                    let length = 20 + Math.sin(a*5)*5;
+                    
+                    ctx.lineWidth = 2.5;
+                    ctx.beginPath();
+                    ctx.moveTo(ex, ey);
+                    ctx.quadraticCurveTo(ex + Math.cos(a)*length*0.5 - Math.sin(a)*wiggle, ey + Math.sin(a)*length*0.5 + Math.cos(a)*wiggle, ex + Math.cos(a)*length, ey + Math.sin(a)*length);
+                    ctx.stroke();
+                }
+
+                // --- 2. ROI (Flagella) ---
+                const flagellaGrad = ctx.createLinearGradient(160, 0, 360, 0);
+                flagellaGrad.addColorStop(0, '#10b981'); flagellaGrad.addColorStop(1, '#059669');
+                ctx.strokeStyle = flagellaGrad; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+                ctx.shadowColor = 'rgba(16, 185, 129, 0.4)'; ctx.shadowBlur = 10;
+                
+                for(let i=0; i<3; i++) {
+                    ctx.lineWidth = 5 - i*0.5; // Roi mảnh dần
+                    ctx.beginPath();
+                    ctx.moveTo(150, -15 + i*15);
+                    let waveSpeed = globalTime * 0.15 * act + i*2;
+                    let w1 = Math.sin(waveSpeed)*25;
+                    let w2 = Math.cos(waveSpeed)*35;
+                    ctx.bezierCurveTo(200, -30 + i*15 + w1, 250, 10 + i*15 - w1, 300, -10 + i*15 + w2);
+                    ctx.bezierCurveTo(340, -20 + i*15 + w2*1.5, 360, i*15 - w2*0.5, 380, i*15 + w2);
+                    ctx.stroke();
+                }
+                ctx.shadowBlur = 0;
+
+                // --- 3. CÁC LỚP VỎ (3D Layers) ---
+                const draw3DLayer = (w, h, cTop, cMid, cBot, sCol, lw) => {
+                    const grad = ctx.createLinearGradient(0, -h/2, 0, h/2);
+                    grad.addColorStop(0, cTop); grad.addColorStop(0.5, cMid); grad.addColorStop(1, cBot);
+                    ctx.fillStyle = grad; ctx.strokeStyle = sCol; ctx.lineWidth = lw;
+                    ctx.beginPath(); ctx.roundRect(-w/2, -h/2, w, h, h/2); ctx.fill(); 
+                    if(lw > 0) ctx.stroke();
+                };
+
+                // Vỏ nhầy (Capsule) - Xanh lam nhạt bóng bẩy
+                draw3DLayer(320, 130, '#5eead4', '#14b8a6', '#0f766e', 'transparent', 0);
+                // Vệt sáng bóng loáng trên vỏ nhầy
+                ctx.fillStyle = 'rgba(255,255,255,0.15)';
+                ctx.beginPath(); ctx.roundRect(-130, -55, 260, 25, 12); ctx.fill();
+
+                // Thành tế bào (Cell Wall) - Lớp dày màu Cam sẫm
+                draw3DLayer(300, 110, '#f59e0b', '#d97706', '#92400e', '#78350f', 2);
+
+                // Màng sinh chất (Plasma Membrane) - Vàng
+                draw3DLayer(284, 94, '#fef08a', '#eab308', '#b45309', 'transparent', 0);
+
+                // Tế bào chất (Cytoplasm) - Kem rải hạt liti
+                draw3DLayer(276, 86, '#fffbeb', '#fde68a', '#fbcfe8', '#d97706', 2);
+                
+                // Hạt cấu trúc mờ trong tế bào chất
+                ctx.fillStyle = 'rgba(217, 119, 6, 0.2)';
+                for(let i=0; i<80; i++) {
+                    let rx = (Math.random()-0.5)*260; let ry = (Math.random()-0.5)*80;
+                    if(Math.hypot(rx*0.3, ry) < 35) ctx.beginPath(); ctx.arc(rx, ry, Math.random()*2+1, 0, Math.PI*2); ctx.fill();
+                }
+
+                // --- 4. VÙNG NHÂN (Nucleoid DNA) ---
+                // Sợi DNA màu tím phát sáng quấn xoắn lấy nhau
+                ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+                ctx.shadowColor = '#d8b4fe'; ctx.shadowBlur = 10;
+                
+                // Lớp viền dày tối
+                ctx.strokeStyle = '#7e22ce'; ctx.lineWidth = 6;
+                ctx.beginPath();
+                for(let i=0; i<=150; i++) {
+                    let t = i * 0.15;
+                    let newX = Math.cos(t*1.3 + globalTime*0.01*act) * (60 + Math.sin(t*2.1)*20);
+                    let newY = Math.sin(t*1.7 - globalTime*0.015*act) * (20 + Math.cos(t*2.7)*10);
+                    if(i===0) ctx.moveTo(newX, newY); else ctx.lineTo(newX, newY);
+                }
+                ctx.stroke();
+
+                // Lớp lõi sáng
+                ctx.strokeStyle = '#e9d5ff'; ctx.lineWidth = 2.5; ctx.shadowBlur = 0; ctx.stroke();
+
+                // --- 5. PLASMID (Vòng DNA nhỏ) ---
+                ctx.lineWidth = 3;
+                const plasmids = [[-80, -15], [85, 20], [50, -25]];
+                plasmids.forEach((p, idx) => {
+                    ctx.beginPath();
+                    let stretch = Math.sin(globalTime*0.05*act + idx)*3;
+                    // Lớp viền
+                    ctx.strokeStyle = '#7e22ce';
+                    ctx.ellipse(p[0], p[1], 12 + stretch, 9 - stretch, idx*0.5, 0, Math.PI*2);
+                    ctx.stroke();
+                    // Lõi
+                    ctx.strokeStyle = '#e9d5ff'; ctx.lineWidth = 1; ctx.stroke(); ctx.lineWidth = 3;
+                });
+
+                // --- 6. RIBOSOME (Hạt đỏ nâu) ---
+                for(let i=0; i<45; i++) {
+                    let rx = Math.sin(i*11)*110; 
+                    let ry = Math.cos(i*7)*35;
+                    // Chuyển động Brownian nhẹ
+                    rx += Math.sin(globalTime*0.02*act + i)*3;
+                    ry += Math.cos(globalTime*0.02*act + i)*3;
+                    
+                    // Lõm bóng 3D cho hạt
+                    const riboGrad = ctx.createRadialGradient(rx-1, ry-1, 0, rx, ry, 3.5);
+                    riboGrad.addColorStop(0, '#fca5a5'); riboGrad.addColorStop(1, '#991b1b');
+                    ctx.fillStyle = riboGrad;
+                    
+                    ctx.beginPath(); ctx.arc(rx, ry, 3.5, 0, Math.PI*2); ctx.fill();
+                }
+
+                ctx.restore(); // Kết thúc vẽ xoay vi khuẩn
+
+                // --- 7. VẼ NHÃN (LABELS) ---
+                if (this.state.showLabels) {
+                    ctx.fillStyle = 'white'; ctx.font = '13px Inter'; ctx.strokeStyle = 'rgba(255,255,255,0.7)'; ctx.lineWidth = 1.5; ctx.shadowColor = 'black'; ctx.shadowBlur = 4;
+                    this.state.labelHits = [];
+                    
+                    const drawLabel = (id, targetLocalX, targetLocalY, text, labelGlobalX, labelGlobalY) => {
+                        // Tính vị trí Global của target point trên vi khuẩn
+                        let angle = this.state.bAngle;
+                        let gx = this.state.bx + (targetLocalX * Math.cos(angle) - targetLocalY * Math.sin(angle));
+                        let gy = this.state.by + (targetLocalX * Math.sin(angle) + targetLocalY * Math.cos(angle));
+
+                        ctx.beginPath(); ctx.moveTo(gx, gy); ctx.lineTo(labelGlobalX, labelGlobalY); ctx.stroke();
+                        let textW = ctx.measureText(text).width;
+                        let alignX = labelGlobalX > gx ? labelGlobalX + 5 : labelGlobalX - textW - 5;
+                        ctx.fillText(text, alignX, labelGlobalY + 4);
+                        
+                        // Hitbox cho chữ để Click-to-Label
+                        this.state.labelHits.push({id: id, x: alignX + textW/2, y: labelGlobalY, w: textW + 20, h: 20});
+                    };
+
+                    drawLabel('pili', 0, -65, "Lông nhung (Pili)", -120, -140);
+                    drawLabel('capsule', -50, 65, "Vỏ nhầy (Capsule)", -180, 130);
+                    drawLabel('cellwall', -100, 50, "Thành tế bào", -220, 90);
+                    drawLabel('membrane', -140, 0, "Màng sinh chất", -240, 20);
+                    drawLabel('cytoplasm', 80, -30, "Tế bào chất", 180, -100);
+                    drawLabel('nucleoid', 0, 0, "Vùng nhân (DNA)", -60, -180);
+                    drawLabel('ribosome', 30, 30, "Ribosome", 100, 160);
+                    drawLabel('plasmid', -80, -15, "Plasmid", -220, -60);
+                    drawLabel('flagella', 220, 0, "Roi (Flagella)", 250, 50);
+
+                    ctx.shadowBlur = 0;
+                }
+
+                ctx.restore(); 
+
+                // --- 8. HIỂN THỊ MODAL BẢNG CHI TIẾT ---
+                if(this.state.selectedOrganelle) {
+                    ctx.fillStyle = 'rgba(28, 25, 23, 0.8)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    const modalW = Math.min(450, canvas.width - 40); const modalH = 220;
+                    const mx = canvas.width/2 - modalW/2; const my = canvas.height/2 - modalH/2;
+                    
+                    ctx.fillStyle = '#1c1917'; ctx.beginPath(); ctx.roundRect(mx, my, modalW, modalH, 16); ctx.fill();
+                    ctx.strokeStyle = '#10b981'; ctx.lineWidth = 2; ctx.stroke();
+                    
+                    const details = {
+                        capsule: { n: "Vỏ Nhầy (Capsule)", d: "Lớp màng bảo vệ ngoài cùng cấu tạo từ polysaccharide. Giúp vi khuẩn tránh bị thực bào bởi tế bào miễn dịch và chống mất nước." },
+                        cellwall: { n: "Thành Tế Bào (Cell Wall)", d: "Cấu tạo từ peptidoglycan. Cung cấp độ cứng cáp, duy trì hình dạng vi khuẩn và bảo vệ chúng khỏi áp suất thẩm thấu." },
+                        membrane: { n: "Màng Sinh Chất (Plasma Membrane)", d: "Lớp màng phospholipid bán thấm. Nằm ngay dưới thành tế bào, kiểm soát chặt chẽ sự trao đổi chất với môi trường." },
+                        cytoplasm: { n: "Tế Bào Chất (Cytoplasm)", d: "Khối chất keo bán lỏng chiếm phần lõi vi khuẩn. Nơi diễn ra các phản ứng sinh hóa, chứa vùng nhân, ribosome và hạt dự trữ." },
+                        nucleoid: { n: "Vùng Nhân (Nucleoid)", d: "Nơi tập trung phân tử DNA xoắn kép dạng vòng mang thông tin di truyền chính. Không có màng nhân bao bọc như ở tế bào nhân thực." },
+                        plasmid: { n: "Plasmid", d: "Các phân tử DNA dạng vòng nhỏ nằm ngoài vùng nhân. Có khả năng tự nhân lên, thường mang các gen kháng kháng sinh." },
+                        ribosome: { n: "Ribôxôm (Ribosome)", d: "Bào quan nhỏ trôi nổi tự do trong tế bào chất. Làm nhiệm vụ dịch mã, tổng hợp protein cần thiết cho vi khuẩn." },
+                        pili: { n: "Lông Nhung (Pili / Fimbriae)", d: "Các cấu trúc hình lông ngắn, mảnh. Giúp vi khuẩn bám dính vào bề mặt tế bào chủ hoặc tham gia trao đổi plasmid (tiếp hợp)." },
+                        flagella: { n: "Roi (Flagella)", d: "Cấu trúc dài như chiếc roi xoay tròn như chân vịt (động cơ sinh học). Cung cấp sức đẩy giúp vi khuẩn bơi lội trong môi trường." }
+                    };
+                    const info = details[this.state.selectedOrganelle];
+                    
+                    ctx.fillStyle = '#10b981'; ctx.font = 'bold 22px Inter'; ctx.textAlign = 'center';
+                    ctx.fillText(info.n, canvas.width/2, my + 50);
+                    
+                    ctx.fillStyle = '#d6d3d1'; ctx.font = '15px Inter'; ctx.textAlign = 'left';
+                    const wrapText = (text, x, y, maxW, lineH) => {
+                        let words = text.split(' '); let line = '';
+                        for(let n = 0; n < words.length; n++) {
+                            let testLine = line + words[n] + ' ';
+                            if (ctx.measureText(testLine).width > maxW && n > 0) { ctx.fillText(line, x, y); line = words[n] + ' '; y += lineH; } 
+                            else { line = testLine; }
+                        }
+                        ctx.fillText(line, x, y);
+                    };
+                    wrapText(info.d, mx + 30, my + 90, modalW - 60, 24);
+                    
+                    ctx.fillStyle = '#a8a29e'; ctx.font = 'italic 12px Inter'; ctx.textAlign = 'center';
+                    ctx.fillText("Click bất kỳ đâu để đóng", canvas.width/2, my + modalH - 20);
+                }
+            },
+            loop() { if(currentSim !== 'bacteria') return; this.update(); this.draw(); animationId = requestAnimationFrame(() => this.loop()); }
+        };
+
+        // ==========================================
         // DYNAMIC CONTROLS BUILDER
         // ==========================================
         function buildControls(simName) {
@@ -2267,6 +2594,19 @@
                             </div>
                         </div>
                     `;
+                } else if (simName === 'bacteria') {
+                    html += `
+                        <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-4 shadow-lg">
+                            <h3 class="text-white font-semibold text-sm mb-3 flex items-center gap-2"><i class="fa-solid fa-bacterium ${themeClass}"></i> Hoạt động</h3>
+                            ${createSlider('bacteria-act', 'Tốc độ bơi', 0.0, 5.0, 0.1, simulations.bacteria.state.activity, 'x', 'updateBacteriaAct', colors.bio)}
+                            <div class="flex items-center justify-between mt-4 border-t border-slate-700 pt-4">
+                                <span class="text-sm text-slate-300 font-medium">Hiển thị chú thích</span>
+                                <button onclick="simulations.bacteria.toggleLabels()" id="btn-bac-labels" class="w-10 h-5 rounded-full ${simulations.bacteria.state.showLabels ? 'bg-emerald-500' : 'bg-slate-600'} relative transition-colors duration-300 focus:outline-none">
+                                    <div class="w-3 h-3 rounded-full bg-white absolute top-1 transition-transform duration-300 ${simulations.bacteria.state.showLabels ? 'translate-x-6' : 'translate-x-1'}"></div>
+                                </button>
+                            </div>
+                        </div>
+                    `;
                 }
             }
 
@@ -2298,6 +2638,8 @@
 
         window.updateCellAct = (v) => simulations.cell.state.activity = v;
         window.updateCellType = (v) => { simulations.cell.state.cellType = v; simulations.cell.state.selectedOrganelle = null; };
+        
+        window.updateBacteriaAct = (v) => simulations.bacteria.state.activity = v;
 
     </script>
 </body>
