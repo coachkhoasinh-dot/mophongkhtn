@@ -138,7 +138,7 @@
                 </div>
                 <div class="p-5 flex-1 flex flex-col">
                     <h2 class="text-xl font-serif font-bold text-stone-100 mb-1.5">Sinh Học</h2>
-                    <p class="text-stone-400 text-xs leading-relaxed mb-5 flex-1">Đi sâu vào giải phẫu hệ tiêu hóa người, theo dõi con đường thức ăn và quan sát vi mô cấu trúc chi tiết của tế bào động vật.</p>
+                    <p class="text-stone-400 text-xs leading-relaxed mb-5 flex-1">Đi sâu vào giải phẫu hệ tiêu hóa người, theo dõi con đường thức ăn và quan sát vi mô cấu trúc chi tiết của tế bào.</p>
                     <button onclick="enterDomain('biology')" class="w-full py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-sm transition-colors flex justify-center items-center gap-2">
                         Bắt đầu học <i class="fa-solid fa-arrow-right"></i>
                     </button>
@@ -181,13 +181,21 @@
 
             <div class="flex-1 overflow-y-auto p-4 space-y-5" id="controls-container"></div>
 
-            <div class="p-4 border-t border-slate-700 bg-slate-850 flex gap-3">
-                <button onclick="resetCurrentSim()" class="flex-1 py-2 px-4 bg-slate-700 hover:bg-slate-600 rounded-lg text-sm font-medium transition flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-rotate-right"></i> Đặt Lại
-                </button>
-                <button onclick="togglePause()" id="pause-btn" class="flex-1 py-2 px-4 rounded-lg text-sm font-medium transition text-white flex items-center justify-center gap-2 shadow-lg">
-                    <i class="fa-solid fa-pause"></i> Dừng
-                </button>
+            <!-- CHUNG: Tốc độ thời gian + Đặt lại + Dừng -->
+            <div class="p-4 border-t border-slate-700 bg-slate-850 flex flex-col gap-3">
+                <div class="flex items-center gap-3 px-1">
+                    <i class="fa-solid fa-clock text-amber-500"></i>
+                    <span class="text-xs font-semibold text-slate-300 w-24 whitespace-nowrap">Tốc độ: <span id="time-scale-val" class="text-amber-500">1.0x</span></span>
+                    <input type="range" id="time-scale-slider" min="0.1" max="2.0" step="0.1" value="1.0" class="flex-1" style="color: #f59e0b" oninput="document.getElementById('time-scale-val').innerText = this.value + 'x'; updateTimeScale(parseFloat(this.value))">
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="resetCurrentSim()" class="flex-1 py-2 px-4 bg-slate-700 hover:bg-slate-600 rounded-lg text-sm font-medium transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-rotate-right"></i> Đặt Lại
+                    </button>
+                    <button onclick="togglePause()" id="pause-btn" class="flex-1 py-2 px-4 rounded-lg text-sm font-medium transition text-white flex items-center justify-center gap-2 shadow-lg">
+                        <i class="fa-solid fa-pause"></i> Dừng
+                    </button>
+                </div>
             </div>
         </aside>
 
@@ -195,7 +203,14 @@
             <div class="flex-1 relative w-full h-full rounded-xl overflow-hidden border border-slate-700 shadow-2xl bg-slate-800">
                 <div class="absolute inset-0 pointer-events-none" style="background-image: linear-gradient(to right, #334155 1px, transparent 1px), linear-gradient(to bottom, #334155 1px, transparent 1px); background-size: 50px 50px; opacity: 0.15;"></div>
                 <canvas id="simCanvas"></canvas>
-                <div id="hud-info" class="absolute top-4 left-4 pointer-events-none bg-slate-900/80 backdrop-blur-sm p-3 rounded-lg border border-slate-700 text-sm font-mono text-white space-y-1 shadow-lg z-20"></div>
+                
+                <!-- Bảng thông số (HUD) có thể đóng mở -->
+                <div class="absolute top-4 left-4 z-20 flex flex-col items-start gap-2 pointer-events-none">
+                    <button onclick="toggleHud()" class="pointer-events-auto bg-slate-800/80 backdrop-blur-md border border-slate-700 text-slate-300 hover:text-white px-3 py-1.5 rounded-lg shadow-lg flex items-center gap-2 text-xs font-semibold transition-all">
+                        <i id="hud-toggle-icon" class="fa-solid fa-eye-slash"></i> <span>Ẩn / Hiện thông số</span>
+                    </button>
+                    <div id="hud-info" class="bg-slate-900/90 backdrop-blur-md p-4 rounded-xl border border-slate-700 text-sm font-mono text-white space-y-2 shadow-2xl transition-all duration-300 origin-top-left pointer-events-auto"></div>
+                </div>
             </div>
 
             <div id="chart-container" class="hidden h-48 w-full mt-4 bg-slate-800 rounded-xl border border-slate-700 p-4 relative">
@@ -217,6 +232,23 @@
         let animationId;
         let globalTime = 0; 
         let timeScale = 1.0;
+        let isHudVisible = true;
+
+        // Hàm Đóng / Mở bảng thông số
+        function toggleHud() {
+            isHudVisible = !isHudVisible;
+            const hud = document.getElementById('hud-info');
+            const icon = document.getElementById('hud-toggle-icon');
+            if(isHudVisible) {
+                hud.style.opacity = '1';
+                hud.style.transform = 'scale(1)';
+                icon.className = 'fa-solid fa-eye-slash';
+            } else {
+                hud.style.opacity = '0';
+                hud.style.transform = 'scale(0.95)';
+                icon.className = 'fa-solid fa-eye';
+            }
+        }
         
         function enterDomain(domain) {
             document.getElementById('landing-page').classList.add('hidden');
@@ -281,7 +313,7 @@
 
             let subMenuHtml = '';
             simRegistry[domain].forEach(sim => {
-                subMenuHtml += `<button onclick="switchSim('${sim.id}')" id="btn-${sim.id}" class="sim-tab flex-1 min-w-[80px] py-2 px-3 rounded-md bg-slate-800 text-slate-300 hover:bg-slate-700 font-medium text-sm transition flex flex-col items-center gap-1 snap-start whitespace-nowrap"><i class="fa-solid ${sim.icon}"></i> ${sim.name}</button>`;
+                subMenuHtml += `<button onclick="switchSim('${sim.id}')" id="btn-${sim.id}" class="sim-tab shrink-0 w-[105px] py-2 px-2 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700 font-medium text-[11px] leading-tight transition flex flex-col items-center justify-center text-center gap-1.5 snap-start whitespace-normal"><i class="fa-solid ${sim.icon} text-base"></i> ${sim.name}</button>`;
             });
             subSimsMenu.innerHTML = subMenuHtml;
             switchSim(simRegistry[domain][0].id);
@@ -290,10 +322,10 @@
         function switchSim(simName) {
             currentSim = simName; isPaused = false;
             document.getElementById('pause-btn').innerHTML = '<i class="fa-solid fa-pause"></i> Dừng';
-            document.querySelectorAll('.sim-tab').forEach(tab => { tab.className = 'sim-tab flex-1 min-w-[80px] py-2 px-3 rounded-md bg-slate-800 text-slate-300 hover:bg-slate-700 font-medium text-sm transition flex flex-col items-center gap-1 snap-start whitespace-nowrap'; });
+            document.querySelectorAll('.sim-tab').forEach(tab => { tab.className = 'sim-tab shrink-0 w-[105px] py-2 px-2 rounded-xl bg-slate-800 text-slate-300 hover:bg-slate-700 font-medium text-[11px] leading-tight transition flex flex-col items-center justify-center text-center gap-1.5 snap-start whitespace-normal'; });
             const activeTab = document.getElementById(`btn-${simName}`);
             const bgClass = currentDomain === 'physics' ? 'bg-accent-600' : (currentDomain === 'chemistry' ? 'bg-chem-600' : 'bg-bio-600');
-            activeTab.className = `sim-tab flex-1 min-w-[80px] py-2 px-3 rounded-md ${bgClass} text-white font-medium text-sm transition flex flex-col items-center gap-1 snap-start whitespace-nowrap shadow-lg shadow-black/20`;
+            activeTab.className = `sim-tab shrink-0 w-[105px] py-2 px-2 rounded-xl ${bgClass} text-white font-semibold text-[11px] leading-tight transition flex flex-col items-center justify-center text-center gap-1.5 snap-start whitespace-normal shadow-md shadow-black/20`;
 
             document.getElementById('chart-container').classList.toggle('hidden', (simName !== 'pendulum' && simName !== 'spring' && simName !== 'hspring'));
             resizeCanvas(); cancelAnimationFrame(animationId); buildControls(simName);
@@ -355,72 +387,130 @@
         // PHYSICS SIMULATIONS
         // ==========================================
         simulations.projectile = {
-            state: { angle: 45, velocity: 20, gravity: 9.8, mass: 1, drag: 0, bounciness: 0.6, x: 0, y: 0, vx: 0, vy: 0, time: 0, isFiring: false, path: [], scale: 10, particles: [] },
+            state: { angle: 45, velocity: 20, gravity: 9.8, mass: 1, drag: 0, bounciness: 0.6, h0: 0, x: 0, y: 0, vx: 0, vy: 0, time: 0, isFiring: false, path: [], scale: 10, particles: [], maxH: 0, accum: 0 },
             origin: { x: 50, y: 0 },
             initPositions() { this.origin.y = canvas.height - 50; if(!this.state.isFiring) { this.state.x = 0; this.state.y = 0; this.state.path = []; } },
             init() { this.initPositions(); this.reset(); this.loop(); },
-            reset() { this.state.isFiring = false; this.state.x = 0; this.state.y = 0; this.state.time = 0; this.state.path = []; this.state.particles = []; this.draw(); },
+            reset() { this.state.isFiring = false; this.state.x = 0; this.state.y = 0; this.state.time = 0; this.state.path = []; this.state.particles = []; this.state.maxH = this.state.h0 || 0; this.state.accum = 0; this.draw(); },
             fire() {
                 this.reset(); this.state.isFiring = true; const rad = this.state.angle * Math.PI / 180;
                 this.state.vx = this.state.velocity * Math.cos(rad); this.state.vy = -this.state.velocity * Math.sin(rad);
-                this.spawnExplosion(this.origin.x + 40*Math.cos(-rad), this.origin.y + 40*Math.sin(-rad), 20, '#cbd5e1');
+                const cy = this.origin.y - (this.state.h0 || 0) * this.state.scale;
+                this.spawnExplosion(this.origin.x + 40*Math.cos(-rad), cy + 40*Math.sin(-rad), 30, '#cbd5e1');
             },
-            spawnExplosion(px, py, count, color) { for(let i=0; i<count; i++) this.state.particles.push({ x: px, y: py, vx: (Math.random() - 0.5) * 10, vy: (Math.random() - 0.5) * 10 - 2, life: 1.0, decay: Math.random() * 0.05 + 0.02, color: color }); },
+            spawnExplosion(px, py, count, color) { for(let i=0; i<count; i++) this.state.particles.push({ x: px, y: py, vx: (Math.random() - 0.5) * 12, vy: (Math.random() - 0.5) * 12 - 2, life: 1.0, decay: Math.random() * 0.04 + 0.02, color: color }); },
             update() {
                 if(isPaused) return;
-                for(let i = this.state.particles.length - 1; i >= 0; i--) { let p = this.state.particles[i]; p.x += p.vx * timeScale; p.y += p.vy * timeScale; p.vy += 0.2 * timeScale; p.life -= p.decay * timeScale; if(p.life <= 0) this.state.particles.splice(i, 1); }
-                if (!this.state.isFiring) { this.draw(); return; }
-                const dt = 0.05 * timeScale; this.state.time += dt;
-                const dragAccX = -(this.state.drag / this.state.mass) * this.state.vx; const dragAccY = -(this.state.drag / this.state.mass) * this.state.vy;
-                this.state.vx += dragAccX * dt; this.state.vy += (this.state.gravity + dragAccY) * dt;
-                this.state.x += this.state.vx * dt; this.state.y += this.state.vy * dt;
-                let px = this.origin.x + this.state.x * this.state.scale; let py = this.origin.y + this.state.y * this.state.scale;
+                this.state.accum += timeScale;
+                while(this.state.accum >= 1) {
+                    this.state.accum -= 1;
+                    
+                    for(let i = this.state.particles.length - 1; i >= 0; i--) { let p = this.state.particles[i]; p.x += p.vx; p.y += p.vy; p.vy += 0.2; p.life -= p.decay; if(p.life <= 0) this.state.particles.splice(i, 1); }
+                    if (!this.state.isFiring) continue;
+                    
+                    const dt = 0.05; this.state.time += dt;
+                    const dragAccX = -(this.state.drag / this.state.mass) * this.state.vx; const dragAccY = -(this.state.drag / this.state.mass) * this.state.vy;
+                    this.state.vx += dragAccX * dt; this.state.vy += (this.state.gravity + dragAccY) * dt;
+                    this.state.x += this.state.vx * dt; this.state.y += this.state.vy * dt;
+                    
+                    const cy = this.origin.y - (this.state.h0 || 0) * this.state.scale;
+                    let px = this.origin.x + this.state.x * this.state.scale; let py = cy + this.state.y * this.state.scale;
 
-                if(Math.random() < 0.5) this.state.particles.push({ x: px, y: py, vx: -this.state.vx*0.1, vy: -this.state.vy*0.1, life: 0.8, decay: 0.04, color: '#fb923c' });
-                if (this.state.time % 0.1 < 0.05) this.state.path.push({x: this.state.x, y: this.state.y});
+                    let currentHeight = (this.state.h0 || 0) - this.state.y;
+                    if (currentHeight > this.state.maxH) this.state.maxH = currentHeight;
 
-                if (this.state.y >= 0) {
-                    this.state.y = 0;
-                    if(this.state.vy > 2 && this.state.bounciness > 0) { this.state.vy = -this.state.vy * this.state.bounciness; this.state.vx *= 0.8; this.spawnExplosion(px, py, 15, '#fbbf24'); } 
-                    else { this.state.isFiring = false; this.spawnExplosion(px, py, 30, '#ef4444'); }
+                    if(Math.random() < 0.6) this.state.particles.push({ x: px, y: py, vx: -this.state.vx*0.15 + (Math.random()-0.5)*2, vy: -this.state.vy*0.15 + (Math.random()-0.5)*2, life: 0.8, decay: 0.04, color: Math.random()>0.5 ? '#f97316' : '#fde047' });
+                    if (this.state.time % 0.1 < 0.05) this.state.path.push({x: this.state.x, y: this.state.y});
+
+                    if (this.state.y >= (this.state.h0 || 0)) {
+                        this.state.y = (this.state.h0 || 0);
+                        if(this.state.vy > 2 && this.state.bounciness > 0) { this.state.vy = -this.state.vy * this.state.bounciness; this.state.vx *= 0.8; this.spawnExplosion(px, this.origin.y, 20, '#fbbf24'); } 
+                        else { this.state.isFiring = false; this.spawnExplosion(px, this.origin.y, 40, '#ef4444'); }
+                    }
                 }
-                hudInfo.innerHTML = `<div>Thời gian: <span style="color:${colors.physics}">${this.state.time.toFixed(2)} s</span></div><div>Tầm xa: <span style="color:${colors.physics}">${this.state.x.toFixed(1)} m</span></div><div>Độ cao: <span style="color:${colors.physics}">${Math.max(0, -this.state.y).toFixed(1)} m</span></div><div>Vận tốc: <span style="color:${colors.physics}">${Math.sqrt(this.state.vx**2 + this.state.vy**2).toFixed(1)} m/s</span></div>`;
+                
+                let currentHeight = (this.state.h0 || 0) - this.state.y;
+                hudInfo.innerHTML = `
+                    <div>Thời gian: <span style="color:${colors.physics}">${this.state.time.toFixed(2)} s</span></div>
+                    <div>Tầm xa: <span style="color:${colors.physics}">${this.state.x.toFixed(1)} m</span></div>
+                    <div>Độ cao cực đại: <span class="text-rose-400 font-bold">${this.state.maxH.toFixed(1)} m</span></div>
+                    <div>Độ cao: <span style="color:${colors.physics}">${Math.max(0, currentHeight).toFixed(1)} m</span></div>
+                    <div>Vận tốc: <span style="color:${colors.physics}">${Math.sqrt(this.state.vx**2 + this.state.vy**2).toFixed(1)} m/s</span></div>
+                `;
             },
             draw() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height); const s = this.state.scale; const ox = this.origin.x; const oy = this.origin.y;
-                ctx.fillStyle = '#cbd5e1'; for(let i=0; i<30; i++) { let rx = Math.sin(i*74)*canvas.width; let ry = Math.cos(i*31)*oy; if(rx>0&&ry>0) ctx.fillRect(rx, ry, 1.5, 1.5); }
-                const grad = ctx.createLinearGradient(0, oy, 0, canvas.height); grad.addColorStop(0, '#475569'); grad.addColorStop(1, '#0f172a');
+                const cy = oy - (this.state.h0 || 0) * s;
+                
+                ctx.fillStyle = '#0f172a'; ctx.fillRect(0,0,canvas.width, oy);
+                ctx.lineWidth = 1;
+                for(let i=0; i<canvas.width; i+=50) { ctx.strokeStyle = 'rgba(56, 189, 248, 0.05)'; ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, oy); ctx.stroke(); }
+                for(let i=0; i<oy; i+=50) { ctx.strokeStyle = 'rgba(56, 189, 248, 0.05)'; ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(canvas.width, i); ctx.stroke(); }
+
+                const grad = ctx.createLinearGradient(0, oy, 0, canvas.height); grad.addColorStop(0, '#334155'); grad.addColorStop(1, '#020617');
                 ctx.fillStyle = grad; ctx.fillRect(0, oy, canvas.width, canvas.height - oy);
-                ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(0, oy); ctx.lineTo(canvas.width, oy); ctx.stroke();
                 
-                ctx.save(); ctx.translate(ox, oy); ctx.rotate(-this.state.angle * Math.PI / 180);
-                const gunGrad = ctx.createLinearGradient(0, -10, 0, 10); gunGrad.addColorStop(0, '#94a3b8'); gunGrad.addColorStop(1, '#475569');
-                ctx.fillStyle = gunGrad; ctx.fillRect(0, -12, 45, 24); ctx.fillStyle = '#fbbf24'; ctx.fillRect(40, -14, 10, 28); ctx.restore();
+                ctx.shadowColor = colors.physics; ctx.shadowBlur = 10;
+                ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(0, oy); ctx.lineTo(canvas.width, oy); ctx.stroke();
+                ctx.shadowBlur = 0;
+
+                if (this.state.maxH > 0.1) {
+                    let hY = oy - this.state.maxH * s;
+                    ctx.beginPath(); ctx.moveTo(0, hY); ctx.lineTo(canvas.width, hY);
+                    ctx.strokeStyle = 'rgba(244, 63, 94, 0.6)'; ctx.setLineDash([8, 8]); ctx.lineWidth = 1.5; ctx.stroke(); ctx.setLineDash([]);
+                    ctx.fillStyle = '#f43f5e'; ctx.font = 'bold 12px Inter'; ctx.fillText('H_max = ' + this.state.maxH.toFixed(1) + ' m', ox + 20, hY - 8);
+                }
+
+                if ((this.state.h0 || 0) > 0) {
+                    const towerGrad = ctx.createLinearGradient(ox-15, cy, ox+15, oy);
+                    towerGrad.addColorStop(0, '#475569'); towerGrad.addColorStop(1, '#1e293b');
+                    ctx.fillStyle = towerGrad;
+                    ctx.beginPath(); ctx.moveTo(ox-15, oy); ctx.lineTo(ox-10, cy); ctx.lineTo(ox+10, cy); ctx.lineTo(ox+15, oy); ctx.fill();
+                    ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 1; ctx.setLineDash([2, 4]);
+                    ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(ox, cy); ctx.stroke(); ctx.setLineDash([]);
+                }
                 
-                ctx.beginPath(); ctx.arc(ox, oy, 18, 0, Math.PI * 2); ctx.fillStyle = '#1e293b'; ctx.fill(); ctx.strokeStyle = '#64748b'; ctx.lineWidth = 4; ctx.stroke();
-                for(let i=0; i<4; i++) { ctx.beginPath(); ctx.moveTo(ox, oy); ctx.lineTo(ox + 18*Math.cos(i*Math.PI/4), oy + 18*Math.sin(i*Math.PI/4)); ctx.stroke(); }
+                ctx.save(); ctx.translate(ox, cy); ctx.rotate(-this.state.angle * Math.PI / 180);
+                const gunGrad = ctx.createLinearGradient(0, -12, 0, 12); gunGrad.addColorStop(0, '#cbd5e1'); gunGrad.addColorStop(0.5, '#64748b'); gunGrad.addColorStop(1, '#1e293b');
+                ctx.fillStyle = gunGrad; ctx.fillRect(0, -14, 55, 28); 
+                const goldGrad = ctx.createLinearGradient(0, -16, 0, 16); goldGrad.addColorStop(0, '#fef08a'); goldGrad.addColorStop(0.5, '#eab308'); goldGrad.addColorStop(1, '#713f12');
+                ctx.fillStyle = goldGrad; ctx.fillRect(45, -16, 12, 32); 
+                ctx.restore();
+                
+                ctx.beginPath(); ctx.arc(ox, cy, 20, 0, Math.PI * 2); ctx.fillStyle = '#0f172a'; ctx.fill(); 
+                ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 5; ctx.stroke();
+                ctx.strokeStyle = '#475569'; ctx.lineWidth = 3;
+                for(let i=0; i<6; i++) { ctx.beginPath(); ctx.moveTo(ox, cy); ctx.lineTo(ox + 20*Math.cos(i*Math.PI/3), cy + 20*Math.sin(i*Math.PI/3)); ctx.stroke(); }
+                ctx.beginPath(); ctx.arc(ox, cy, 6, 0, Math.PI * 2); ctx.fillStyle = '#eab308'; ctx.fill(); 
 
                 if (this.state.path.length > 0) {
-                    ctx.beginPath(); ctx.moveTo(ox + this.state.path[0].x * s, oy + this.state.path[0].y * s);
-                    for (let i = 1; i < this.state.path.length; i++) ctx.lineTo(ox + this.state.path[i].x * s, oy + this.state.path[i].y * s);
-                    ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)'; ctx.setLineDash([5, 10]); ctx.lineWidth = 2; ctx.stroke(); ctx.setLineDash([]);
+                    ctx.beginPath(); ctx.moveTo(ox + this.state.path[0].x * s, cy + this.state.path[0].y * s);
+                    for (let i = 1; i < this.state.path.length; i++) ctx.lineTo(ox + this.state.path[i].x * s, cy + this.state.path[i].y * s);
+                    ctx.strokeStyle = 'rgba(56, 189, 248, 0.8)'; ctx.shadowColor = '#38bdf8'; ctx.shadowBlur = 8;
+                    ctx.setLineDash([6, 8]); ctx.lineWidth = 2.5; ctx.stroke(); ctx.setLineDash([]); ctx.shadowBlur = 0;
                 }
-                this.state.particles.forEach(p => { ctx.globalAlpha = p.life; ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(p.x, p.y, Math.random()*3+1, 0, Math.PI*2); ctx.fill(); }); ctx.globalAlpha = 1.0;
+                
+                this.state.particles.forEach(p => { 
+                    ctx.globalAlpha = p.life; ctx.fillStyle = p.color; 
+                    ctx.shadowColor = p.color; ctx.shadowBlur = 10;
+                    ctx.beginPath(); ctx.arc(p.x, p.y, Math.random()*4+2, 0, Math.PI*2); ctx.fill(); 
+                }); 
+                ctx.globalAlpha = 1.0; ctx.shadowBlur = 0;
 
-                let px = ox + this.state.x * s; let py = oy + this.state.y * s;
-                ctx.beginPath(); ctx.arc(px, py, 10, 0, Math.PI * 2);
-                const ballGrad = ctx.createRadialGradient(px-3, py-3, 2, px, py, 10); ballGrad.addColorStop(0, '#fecdd3'); ballGrad.addColorStop(1, colors.danger);
-                ctx.fillStyle = ballGrad; ctx.shadowBlur = 20; ctx.shadowColor = colors.danger; ctx.fill(); ctx.shadowBlur = 0;
+                let px = ox + this.state.x * s; let py = cy + this.state.y * s;
+                ctx.beginPath(); ctx.arc(px, py, 12, 0, Math.PI * 2);
+                const ballGrad = ctx.createRadialGradient(px-4, py-4, 2, px, py, 12); ballGrad.addColorStop(0, '#ffffff'); ballGrad.addColorStop(0.3, '#f43f5e'); ballGrad.addColorStop(1, '#881337');
+                ctx.fillStyle = ballGrad; ctx.shadowBlur = 25; ctx.shadowColor = '#f43f5e'; ctx.fill(); ctx.shadowBlur = 0;
             },
             loop() { if(currentSim !== 'projectile') return; this.update(); this.draw(); animationId = requestAnimationFrame(() => this.loop()); }
         };
 
         simulations.pendulum = {
-            state: { length: 200, mass: 5, gravity: 9.8, damping: 1.0, angle: Math.PI / 4, aVelocity: 0, aAcceleration: 0, isDragging: false, trail: [] },
+            state: { length: 200, mass: 5, gravity: 9.8, damping: 1.0, angle: Math.PI / 4, aVelocity: 0, aAcceleration: 0, isDragging: false, trail: [], accum: 0 },
             origin: { x: 0, y: 0 }, bob: { x: 0, y: 0, r: 20 },
             initPositions() { this.origin.x = canvas.width / 2; this.origin.y = 50; this.updateBobPos(); },
             init() { this.initPositions(); initEnergyChart('Động Năng', 'Thế Năng', 'Cơ Năng', '#38bdf8', '#f43f5e', '#10b981'); this.reset(); this.setupInteraction(); this.loop(); },
-            reset() { this.state.angle = Math.PI / 4; this.state.aVelocity = 0; this.state.aAcceleration = 0; this.state.trail = []; this.updateBobPos(); if(energyChartInstance) energyChartInstance.data.datasets.forEach(ds => ds.data = []); },
+            reset() { this.state.angle = Math.PI / 4; this.state.aVelocity = 0; this.state.aAcceleration = 0; this.state.trail = []; this.state.accum = 0; this.updateBobPos(); if(energyChartInstance) energyChartInstance.data.datasets.forEach(ds => ds.data = []); },
             updateBobPos() { this.bob.x = this.origin.x + this.state.length * Math.sin(this.state.angle); this.bob.y = this.origin.y + this.state.length * Math.cos(this.state.angle); this.bob.r = 12 + this.state.mass * 1.5; },
             setupInteraction() {
                 canvas.onmousedown = (e) => { if(currentSim !== 'pendulum') return; const r = canvas.getBoundingClientRect(); if (Math.hypot(e.clientX-r.left - this.bob.x, e.clientY-r.top - this.bob.y) < this.bob.r+15) { this.state.isDragging = true; this.state.aVelocity = 0; } };
@@ -429,12 +519,16 @@
             },
             update() {
                 if (this.state.isDragging || isPaused) { this.state.trail.push({x: this.bob.x, y: this.bob.y}); if(this.state.trail.length > 20) this.state.trail.shift(); return; }
-                const L = this.state.length / 100; const subSteps = 10; const dt = (0.05 * timeScale) / subSteps;
-                for(let i=0; i<subSteps; i++) {
-                    this.state.aAcceleration = -(this.state.gravity / L) * Math.sin(this.state.angle);
-                    this.state.aVelocity += this.state.aAcceleration * dt; this.state.aVelocity *= Math.pow(this.state.damping, 1/subSteps); this.state.angle += this.state.aVelocity * dt;
+                this.state.accum += timeScale;
+                while(this.state.accum >= 1) {
+                    this.state.accum -= 1;
+                    const L = this.state.length / 100; const subSteps = 10; const dt = 0.05 / subSteps;
+                    for(let i=0; i<subSteps; i++) {
+                        this.state.aAcceleration = -(this.state.gravity / L) * Math.sin(this.state.angle);
+                        this.state.aVelocity += this.state.aAcceleration * dt; this.state.aVelocity *= Math.pow(this.state.damping, 1/subSteps); this.state.angle += this.state.aVelocity * dt;
+                    }
+                    this.updateBobPos(); this.state.trail.push({x: this.bob.x, y: this.bob.y}); if(this.state.trail.length > 30) this.state.trail.shift(); this.updateEnergy();
                 }
-                this.updateBobPos(); this.state.trail.push({x: this.bob.x, y: this.bob.y}); if(this.state.trail.length > 30) this.state.trail.shift(); this.updateEnergy();
             },
             updateEnergy() {
                 const L = this.state.length / 100; const KE = 0.5 * this.state.mass * Math.pow(this.state.aVelocity * L, 2); const PE = this.state.mass * this.state.gravity * L * (1 - Math.cos(this.state.angle)); const TE = KE + PE;
@@ -447,27 +541,43 @@
             },
             draw() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.shadowBlur = 10; ctx.shadowColor = 'black'; ctx.fillStyle = '#64748b'; ctx.fillRect(this.origin.x - 40, this.origin.y - 15, 80, 15); ctx.shadowBlur = 0;
-                ctx.beginPath(); ctx.arc(this.origin.x, this.origin.y, 6, 0, Math.PI * 2); ctx.fillStyle = '#cbd5e1'; ctx.fill();
+                const ox = this.origin.x; const oy = this.origin.y;
+                
+                ctx.fillStyle = '#0f172a'; ctx.fillRect(0,0,canvas.width, canvas.height);
+                ctx.lineWidth = 1;
+                for(let i=0; i<canvas.width; i+=50) { ctx.strokeStyle = 'rgba(56, 189, 248, 0.03)'; ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke(); }
+                for(let i=0; i<canvas.height; i+=50) { ctx.strokeStyle = 'rgba(56, 189, 248, 0.03)'; ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(canvas.width, i); ctx.stroke(); }
+
+                ctx.shadowBlur = 15; ctx.shadowColor = 'rgba(0,0,0,0.8)';
+                const barGrad = ctx.createLinearGradient(ox-50, oy-15, ox-50, oy+15);
+                barGrad.addColorStop(0, '#94a3b8'); barGrad.addColorStop(0.5, '#f8fafc'); barGrad.addColorStop(1, '#475569');
+                ctx.fillStyle = barGrad; ctx.fillRect(ox - 60, oy - 15, 120, 20); ctx.shadowBlur = 0;
+                ctx.beginPath(); ctx.arc(ox, oy-5, 8, 0, Math.PI * 2); ctx.fillStyle = '#cbd5e1'; ctx.fill(); ctx.strokeStyle = '#475569'; ctx.lineWidth = 2; ctx.stroke();
+                
                 if(this.state.trail.length > 1) {
                     ctx.beginPath(); ctx.moveTo(this.state.trail[0].x, this.state.trail[0].y); for(let i=1; i<this.state.trail.length; i++) ctx.lineTo(this.state.trail[i].x, this.state.trail[i].y);
-                    ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)'; ctx.lineWidth = this.bob.r; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke();
+                    ctx.strokeStyle = 'rgba(56, 189, 248, 0.25)'; ctx.lineWidth = this.bob.r * 1.5; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; 
+                    ctx.shadowColor = '#38bdf8'; ctx.shadowBlur = 20; ctx.stroke(); ctx.shadowBlur = 0;
                 }
-                ctx.beginPath(); ctx.moveTo(this.origin.x, this.origin.y); ctx.lineTo(this.bob.x, this.bob.y); ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 3; ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(ox, oy-5); ctx.lineTo(this.bob.x, this.bob.y); 
+                ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 4; ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 10; ctx.stroke(); ctx.shadowBlur = 0;
+                
                 ctx.beginPath(); ctx.arc(this.bob.x, this.bob.y, this.bob.r, 0, Math.PI * 2);
-                const grd = ctx.createRadialGradient(this.bob.x - this.bob.r/3, this.bob.y - this.bob.r/3, 2, this.bob.x, this.bob.y, this.bob.r);
-                grd.addColorStop(0, '#ffffff'); grd.addColorStop(0.3, colors.accent); grd.addColorStop(1, '#0369a1');
-                ctx.fillStyle = grd; ctx.fill(); ctx.strokeStyle = '#0284c7'; ctx.lineWidth = 2; ctx.stroke();
+                const grd = ctx.createRadialGradient(this.bob.x - this.bob.r/2.5, this.bob.y - this.bob.r/2.5, 2, this.bob.x, this.bob.y, this.bob.r);
+                grd.addColorStop(0, '#ffffff'); grd.addColorStop(0.3, colors.accent); grd.addColorStop(1, '#082f49');
+                ctx.fillStyle = grd; 
+                ctx.shadowColor = 'rgba(56,189,248, 0.5)'; ctx.shadowBlur = 25; ctx.fill(); ctx.shadowBlur = 0;
+                ctx.strokeStyle = '#0ea5e9'; ctx.lineWidth = 2; ctx.stroke();
             },
             loop() { if(currentSim !== 'pendulum') return; this.update(); this.draw(); animationId = requestAnimationFrame(() => this.loop()); }
         };
 
         simulations.spring = {
-            state: { k: 10, mass: 2, gravity: 9.8, damping: 1.0, y: 0, velocity: 0, restLength: 150, isDragging: false, trail: [] },
+            state: { k: 10, mass: 2, gravity: 9.8, damping: 1.0, y: 0, velocity: 0, restLength: 150, isDragging: false, trail: [], accum: 0 },
             origin: { x: 0, y: 0 },
             initPositions() { this.origin.x = canvas.width / 2; this.origin.y = 50; },
             init() { this.initPositions(); initEnergyChart('Động Năng', 'Tổng Thế Năng', 'Cơ Năng', '#38bdf8', '#f43f5e', '#10b981'); this.reset(); this.setupInteraction(); this.loop(); },
-            reset() { this.state.y = 100; this.state.velocity = 0; this.state.trail = []; if(energyChartInstance) energyChartInstance.data.datasets.forEach(ds => ds.data = []); },
+            reset() { this.state.y = 100; this.state.velocity = 0; this.state.trail = []; this.state.accum = 0; if(energyChartInstance) energyChartInstance.data.datasets.forEach(ds => ds.data = []); },
             setupInteraction() {
                 canvas.onmousedown = (e) => { if(currentSim !== 'spring') return; const r = canvas.getBoundingClientRect(); if (Math.hypot(e.clientX-r.left - this.origin.x, e.clientY-r.top - (this.origin.y+this.state.restLength+this.state.y)) < 30) { this.state.isDragging = true; this.state.velocity = 0; } };
                 canvas.onmousemove = (e) => { if(currentSim !== 'spring' || !this.state.isDragging) return; const r = canvas.getBoundingClientRect(); this.state.y = e.clientY-r.top - this.origin.y - this.state.restLength; if(this.state.y < -this.state.restLength + 20) this.state.y = -this.state.restLength + 20; };
@@ -475,14 +585,18 @@
             },
             update() {
                 const bobY = this.origin.y + this.state.restLength + this.state.y;
-                if (!this.state.isDragging && !isPaused) {
-                    const subSteps = 10; const dt = (0.05 * timeScale) / subSteps;
+                if (this.state.isDragging || isPaused) return;
+
+                this.state.accum += timeScale;
+                while(this.state.accum >= 1) {
+                    this.state.accum -= 1;
+                    const subSteps = 10; const dt = 0.05 / subSteps;
                     for(let i=0; i<subSteps; i++) {
                         const accel = (-this.state.k * this.state.y + this.state.mass * this.state.gravity) / this.state.mass;
                         this.state.velocity += accel * dt; this.state.velocity *= Math.pow(this.state.damping, 1/subSteps); this.state.y += this.state.velocity * dt;
                     }
+                    this.state.trail.push({x: this.origin.x, y: this.origin.y + this.state.restLength + this.state.y}); if(this.state.trail.length > 25) this.state.trail.shift(); this.updateEnergy();
                 }
-                this.state.trail.push({x: this.origin.x, y: bobY}); if(this.state.trail.length > 25) this.state.trail.shift(); this.updateEnergy();
             },
             updateEnergy() {
                 const scale = 1 / 10000; const KE = 0.5 * this.state.mass * this.state.velocity * this.state.velocity * scale;
@@ -495,19 +609,46 @@
                 }
             },
             draw() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.fillStyle = '#64748b'; ctx.fillRect(this.origin.x - 40, this.origin.y - 15, 80, 15);
+                ctx.clearRect(0, 0, canvas.width, canvas.height); 
+                ctx.fillStyle = '#0f172a'; ctx.fillRect(0,0,canvas.width, canvas.height);
+                
+                ctx.shadowBlur = 10; ctx.shadowColor = 'rgba(0,0,0,0.8)';
+                const barGrad = ctx.createLinearGradient(this.origin.x-40, this.origin.y-15, this.origin.x-40, this.origin.y+15);
+                barGrad.addColorStop(0, '#94a3b8'); barGrad.addColorStop(0.5, '#f8fafc'); barGrad.addColorStop(1, '#475569');
+                ctx.fillStyle = barGrad; ctx.fillRect(this.origin.x - 50, this.origin.y - 15, 100, 20); ctx.shadowBlur = 0;
+
                 const bobY = this.origin.y + this.state.restLength + this.state.y;
-                if(this.state.trail.length > 1) { ctx.beginPath(); ctx.moveTo(this.state.trail[0].x, this.state.trail[0].y); for(let i=1; i<this.state.trail.length; i++) ctx.lineTo(this.state.trail[i].x, this.state.trail[i].y); ctx.strokeStyle = 'rgba(236, 72, 153, 0.4)'; ctx.lineWidth = 15; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke(); }
-                const coils = 12; const seg = (bobY - this.origin.y) / coils; ctx.beginPath(); ctx.moveTo(this.origin.x, this.origin.y);
-                for(let i=1; i<=coils; i++) { ctx.lineTo(this.origin.x + (i%2===0?-20:20), this.origin.y + i*seg - seg/2); ctx.lineTo(this.origin.x, this.origin.y + i*seg); }
-                ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 3; ctx.stroke();
-                const size = 15 + this.state.mass * 2; ctx.fillStyle = '#f472b6'; ctx.fillRect(this.origin.x - size/2, bobY, size, size); ctx.strokeStyle = '#be185d'; ctx.strokeRect(this.origin.x - size/2, bobY, size, size);
+                
+                if(this.state.trail.length > 1) { 
+                    ctx.beginPath(); ctx.moveTo(this.state.trail[0].x, this.state.trail[0].y); for(let i=1; i<this.state.trail.length; i++) ctx.lineTo(this.state.trail[i].x, this.state.trail[i].y); 
+                    ctx.strokeStyle = 'rgba(244, 63, 94, 0.25)'; ctx.lineWidth = 25; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; 
+                    ctx.shadowColor = '#f43f5e'; ctx.shadowBlur = 20; ctx.stroke(); ctx.shadowBlur = 0;
+                }
+                
+                const coils = 12; const seg = (bobY - this.origin.y) / coils; 
+                ctx.beginPath(); ctx.moveTo(this.origin.x, this.origin.y);
+                for(let i=1; i<=coils; i++) { 
+                    ctx.lineTo(this.origin.x + (i%2===0?-25:25), this.origin.y + i*seg - seg/2); 
+                    ctx.lineTo(this.origin.x, this.origin.y + i*seg); 
+                }
+                ctx.strokeStyle = '#334155'; ctx.lineWidth = 7; ctx.lineJoin = 'round'; ctx.stroke(); 
+                ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 5; ctx.stroke(); 
+                ctx.strokeStyle = '#f8fafc'; ctx.lineWidth = 2; ctx.stroke(); 
+
+                const size = 15 + this.state.mass * 2.5; 
+                const bx = this.origin.x - size/2; const by = bobY;
+                ctx.shadowColor = 'rgba(244,63,94, 0.5)'; ctx.shadowBlur = 20;
+                const boxGrad = ctx.createLinearGradient(bx, by, bx+size, by+size);
+                boxGrad.addColorStop(0, '#fbcfe8'); boxGrad.addColorStop(0.3, '#f43f5e'); boxGrad.addColorStop(1, '#881337');
+                ctx.fillStyle = boxGrad; ctx.fillRect(bx, by, size, size); 
+                ctx.shadowBlur = 0;
+                ctx.strokeStyle = '#fda4af'; ctx.lineWidth = 2; ctx.strokeRect(bx, by, size, size); 
             },
             loop() { if(currentSim !== 'spring') return; this.update(); this.draw(); animationId = requestAnimationFrame(() => this.loop()); }
         };
 
         simulations.hspring = { ...simulations.spring, 
-            state: { k: 15, mass: 2, mu: 0.0, gravity: 9.8, x: 150, velocity: 0, restLength: 200, isDragging: false, trail: [] },
+            state: { k: 15, mass: 2, mu: 0.0, gravity: 9.8, x: 150, velocity: 0, restLength: 200, isDragging: false, trail: [], accum: 0 },
             initPositions() { this.origin.x = 80; this.origin.y = canvas.height / 2 + 50; },
             setupInteraction() {
                 canvas.onmousedown = (e) => { if(currentSim !== 'hspring') return; const r = canvas.getBoundingClientRect(); if (Math.hypot(e.clientX-r.left - (this.origin.x+this.state.restLength+this.state.x), e.clientY-r.top - (this.origin.y-25)) < 50) { this.state.isDragging = true; this.state.velocity = 0; } };
@@ -516,59 +657,133 @@
             },
             update() {
                 const bobX = this.origin.x + this.state.restLength + this.state.x;
-                if (!this.state.isDragging && !isPaused) {
-                    const subSteps = 10; const dt = (0.05 * timeScale) / subSteps;
+                if (this.state.isDragging || isPaused) return;
+
+                this.state.accum += timeScale;
+                while(this.state.accum >= 1) {
+                    this.state.accum -= 1;
+                    const subSteps = 10; const dt = 0.05 / subSteps;
                     for(let i=0; i<subSteps; i++) {
                         const springF = -this.state.k * this.state.x; const maxFric = this.state.mu * this.state.mass * this.state.gravity;
                         let fricF = Math.abs(this.state.velocity) > 0.1 ? -Math.sign(this.state.velocity) * maxFric : (Math.abs(springF) <= maxFric ? -springF : -Math.sign(springF) * maxFric);
                         if(Math.abs(this.state.velocity) < 0.5 && Math.abs(springF) <= maxFric) { this.state.velocity = 0; fricF = -springF; }
                         this.state.velocity += ((springF + fricF) / this.state.mass) * dt; this.state.x += this.state.velocity * dt;
                     }
+                    globalTime++;
+                    if(globalTime % 2 === 0) { this.state.trail.push({x: this.origin.x + this.state.restLength + this.state.x, y: this.origin.y - 25}); if(this.state.trail.length > 30) this.state.trail.shift(); }
+                    const scale = 1/10000; const KE = 0.5*this.state.mass*this.state.velocity*this.state.velocity*scale; const PE = 0.5*this.state.k*this.state.x*this.state.x*scale; const TE = KE+PE;
+                    if (globalTime % 3 === 0 && energyChartInstance && !isPaused && !this.state.isDragging) { const data = energyChartInstance.data; if(data.labels.length > 50) { data.labels.shift(); data.datasets.forEach(ds => ds.data.shift()); } data.labels.push(''); data.datasets[0].data.push(KE); data.datasets[1].data.push(PE); data.datasets[2].data.push(TE); energyChartInstance.update('none'); }
                 }
-                if(globalTime % 2 === 0) { this.state.trail.push({x: bobX, y: this.origin.y - 25}); if(this.state.trail.length > 30) this.state.trail.shift(); }
-                const scale = 1/10000; const KE = 0.5*this.state.mass*this.state.velocity*this.state.velocity*scale; const PE = 0.5*this.state.k*this.state.x*this.state.x*scale; const TE = KE+PE;
                 hudInfo.innerHTML = `<div>Độ dời: <span style="color:${colors.physics}">${this.state.x.toFixed(1)} cm</span></div>`;
-                if (globalTime % 3 === 0 && energyChartInstance && !isPaused && !this.state.isDragging) { const data = energyChartInstance.data; if(data.labels.length > 50) { data.labels.shift(); data.datasets.forEach(ds => ds.data.shift()); } data.labels.push(''); data.datasets[0].data.push(KE); data.datasets[1].data.push(PE); data.datasets[2].data.push(TE); energyChartInstance.update('none'); }
             },
             draw() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.fillStyle = '#334155'; ctx.fillRect(0, this.origin.y, canvas.width, canvas.height - this.origin.y); ctx.fillStyle = '#64748b'; ctx.fillRect(0, this.origin.y - 180, this.origin.x, 220);
+                ctx.clearRect(0, 0, canvas.width, canvas.height); 
+                ctx.fillStyle = '#0f172a'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                const floorGrad = ctx.createLinearGradient(0, this.origin.y, 0, canvas.height);
+                floorGrad.addColorStop(0, '#1e293b'); floorGrad.addColorStop(1, '#020617');
+                ctx.fillStyle = floorGrad; ctx.fillRect(0, this.origin.y, canvas.width, canvas.height - this.origin.y); 
+                ctx.strokeStyle = '#38bdf8'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0, this.origin.y); ctx.lineTo(canvas.width, this.origin.y); ctx.stroke();
+                
+                const wallGrad = ctx.createLinearGradient(0, this.origin.y-180, this.origin.x, this.origin.y-180);
+                wallGrad.addColorStop(0, '#334155'); wallGrad.addColorStop(1, '#475569');
+                ctx.fillStyle = wallGrad; ctx.fillRect(0, this.origin.y - 180, this.origin.x, 180);
+
                 const bobX = this.origin.x + this.state.restLength + this.state.x;
-                if(this.state.trail.length > 1) { ctx.beginPath(); ctx.moveTo(this.state.trail[0].x, this.state.trail[0].y); for(let i=1; i<this.state.trail.length; i++) ctx.lineTo(this.state.trail[i].x, this.state.trail[i].y); ctx.strokeStyle='rgba(168,85,247,0.4)'; ctx.lineWidth=20; ctx.stroke(); }
-                const coils = 14; const seg = (bobX - this.origin.x) / coils; const cY = this.origin.y - 25; ctx.beginPath(); ctx.moveTo(this.origin.x, cY);
-                for(let i=1; i<=coils; i++) { ctx.lineTo(this.origin.x+i*seg-seg/2, cY+(i%2===0?-22:22)); ctx.lineTo(this.origin.x+i*seg, cY); } ctx.strokeStyle='#94a3b8'; ctx.lineWidth=4; ctx.stroke();
-                const size = 30 + this.state.mass * 2; ctx.fillStyle = '#a855f7'; ctx.fillRect(bobX - size/2, this.origin.y - size, size, size); ctx.strokeRect(bobX - size/2, this.origin.y - size, size, size);
-                globalTime++;
+                
+                if(this.state.trail.length > 1) { 
+                    ctx.beginPath(); ctx.moveTo(this.state.trail[0].x, this.state.trail[0].y); for(let i=1; i<this.state.trail.length; i++) ctx.lineTo(this.state.trail[i].x, this.state.trail[i].y); 
+                    ctx.strokeStyle='rgba(168,85,247,0.25)'; ctx.lineWidth=35; ctx.lineCap='round'; ctx.lineJoin='round'; 
+                    ctx.shadowColor = '#a855f7'; ctx.shadowBlur = 20; ctx.stroke(); ctx.shadowBlur = 0;
+                }
+                
+                const coils = 16; const seg = (bobX - this.origin.x) / coils; const cY = this.origin.y - 25; 
+                ctx.beginPath(); ctx.moveTo(this.origin.x, cY);
+                for(let i=1; i<=coils; i++) { 
+                    ctx.lineTo(this.origin.x+i*seg-seg/2, cY+(i%2===0?-25:25)); 
+                    ctx.lineTo(this.origin.x+i*seg, cY); 
+                } 
+                ctx.strokeStyle = '#334155'; ctx.lineWidth = 8; ctx.lineJoin = 'round'; ctx.stroke();
+                ctx.strokeStyle='#94a3b8'; ctx.lineWidth=5; ctx.stroke();
+                ctx.strokeStyle='#f8fafc'; ctx.lineWidth=2; ctx.stroke();
+
+                const size = 30 + this.state.mass * 2.5; 
+                const bx = bobX - size/2; const by = this.origin.y - size;
+                ctx.shadowColor = 'rgba(168,85,247,0.5)'; ctx.shadowBlur = 25;
+                const boxGrad = ctx.createLinearGradient(bx, by, bx+size, by+size);
+                boxGrad.addColorStop(0, '#e879f9'); boxGrad.addColorStop(0.5, '#a855f7'); boxGrad.addColorStop(1, '#4c1d95');
+                ctx.fillStyle = boxGrad; ctx.fillRect(bx, by, size, size); 
+                ctx.shadowBlur = 0;
+                ctx.strokeStyle='#f0abfc'; ctx.lineWidth=2; ctx.strokeRect(bx, by, size, size);
             },
             loop() { if(currentSim !== 'hspring') return; this.update(); this.draw(); animationId = requestAnimationFrame(() => this.loop()); }
         };
 
         simulations.gravity = {
-            state: { sunMass: 10000, G: 0.1, planets: [] }, origin: { x: 0, y: 0 },
+            state: { sunMass: 10000, G: 0.1, planets: [], accum: 0 }, origin: { x: 0, y: 0 },
             initPositions() { this.origin.x = canvas.width / 2; this.origin.y = canvas.height / 2; },
             init() { this.initPositions(); this.reset(); canvas.onmousedown = (e) => { if(currentSim !== 'gravity') return; const r = canvas.getBoundingClientRect(); this.addPlanet(e.clientX-r.left, e.clientY-r.top); }; this.loop(); },
-            reset() { this.state.planets = []; this.addPlanet(this.origin.x, this.origin.y - 150, 6, 0); },
+            reset() { this.state.planets = []; this.state.accum = 0; this.addPlanet(this.origin.x, this.origin.y - 150, 6, 0); },
             addPlanet(x, y, vx=null, vy=null) {
                 const dx = x - this.origin.x; const dy = y - this.origin.y; const r = Math.sqrt(dx*dx + dy*dy); let v = Math.sqrt((this.state.G*this.state.sunMass)/r);
-                this.state.planets.push({ x:x, y:y, vx:vx===null?v*(dy/r):vx, vy:vy===null?v*(-dx/r):vy, mass:Math.random()*5+1, color:['#38bdf8','#f472b6','#a7f3d0','#fbbf24','#c084fc'][Math.floor(Math.random()*5)], trail:[] });
+                this.state.planets.push({ x:x, y:y, vx:vx===null?v*(dy/r):vx, vy:vy===null?v*(-dx/r):vy, mass:Math.random()*5+2, color:['#38bdf8','#f472b6','#a7f3d0','#fbbf24','#c084fc'][Math.floor(Math.random()*5)], trail:[] });
             },
             update() {
-                if(isPaused) return; const dt = 0.5 * timeScale;
-                this.state.planets.forEach((p, i) => {
-                    const dx = this.origin.x - p.x; const dy = this.origin.y - p.y; const dSq = dx*dx + dy*dy; const d = Math.sqrt(dSq);
-                    if (d > 10) { const F = (this.state.G*this.state.sunMass*p.mass)/dSq; p.vx += (F*dx/d)/p.mass*dt; p.vy += (F*dy/d)/p.mass*dt; }
-                    p.x += p.vx*dt; p.y += p.vy*dt; if (globalTime%3===0) { p.trail.push({x:p.x, y:p.y}); if(p.trail.length>200) p.trail.shift(); }
-                    if(d > 2000) this.state.planets.splice(i, 1);
-                });
+                if(isPaused) return; 
+                this.state.accum += timeScale;
+                while(this.state.accum >= 1) {
+                    this.state.accum -= 1;
+                    const dt = 0.5;
+                    this.state.planets.forEach((p, i) => {
+                        const dx = this.origin.x - p.x; const dy = this.origin.y - p.y; const dSq = dx*dx + dy*dy; const d = Math.sqrt(dSq);
+                        if (d > 15) { const F = (this.state.G*this.state.sunMass*p.mass)/dSq; p.vx += (F*dx/d)/p.mass*dt; p.vy += (F*dy/d)/p.mass*dt; }
+                        p.x += p.vx*dt; p.y += p.vy*dt; 
+                        if (globalTime%1===0) { p.trail.push({x:p.x, y:p.y}); if(p.trail.length>1000) p.trail.shift(); }
+                        if(d > 3000) this.state.planets.splice(i, 1);
+                    });
+                    globalTime++;
+                }
                 hudInfo.innerHTML = `<div>Số hành tinh: <span style="color:${colors.physics}">${this.state.planets.length}</span></div>`;
             },
             draw() {
-                ctx.clearRect(0, 0, canvas.width, canvas.height); ctx.fillStyle = '#cbd5e1';
-                for(let i=0; i<50; i++) { ctx.globalAlpha = 0.5+Math.sin(globalTime*0.05+i)*0.5; ctx.fillRect((Math.sin(i*99)*canvas.width/2)+canvas.width/2, (Math.cos(i*31)*canvas.height/2)+canvas.height/2, 1.5, 1.5); } ctx.globalAlpha = 1.0;
-                ctx.beginPath(); ctx.arc(this.origin.x, this.origin.y, 25, 0, Math.PI*2); ctx.fillStyle = '#f59e0b'; ctx.shadowBlur = 30; ctx.shadowColor = '#fbbf24'; ctx.fill(); ctx.shadowBlur = 0;
+                ctx.clearRect(0, 0, canvas.width, canvas.height); 
+                
+                // Deep Space Background
+                ctx.fillStyle = '#020617'; ctx.fillRect(0,0,canvas.width,canvas.height);
+                ctx.fillStyle = '#cbd5e1';
+                for(let i=0; i<100; i++) { 
+                    ctx.globalAlpha = 0.3+Math.sin(globalTime*0.02+i)*0.5; 
+                    ctx.fillRect((Math.sin(i*99)*canvas.width/2)+canvas.width/2, (Math.cos(i*31)*canvas.height/2)+canvas.height/2, Math.random()*2, Math.random()*2); 
+                } 
+                ctx.globalAlpha = 1.0;
+                
+                // Mặt trời (Corona phát sáng chói lóa)
+                const sunPulse = Math.sin(globalTime * 0.05) * 10;
+                const sunGlow = ctx.createRadialGradient(this.origin.x, this.origin.y, 20, this.origin.x, this.origin.y, 80 + sunPulse);
+                sunGlow.addColorStop(0, '#fef08a'); sunGlow.addColorStop(0.3, '#f59e0b'); sunGlow.addColorStop(1, 'transparent');
+                ctx.fillStyle = sunGlow; ctx.fillRect(this.origin.x - 100, this.origin.y - 100, 200, 200);
+                
+                ctx.beginPath(); ctx.arc(this.origin.x, this.origin.y, 28, 0, Math.PI*2); 
+                ctx.fillStyle = '#fbbf24'; ctx.shadowBlur = 40; ctx.shadowColor = '#f59e0b'; ctx.fill(); ctx.shadowBlur = 0;
+                ctx.fillStyle = '#fffbeb'; ctx.beginPath(); ctx.arc(this.origin.x-5, this.origin.y-5, 8, 0, Math.PI*2); ctx.fill();
+
+                // Các hành tinh
                 this.state.planets.forEach(p => {
-                    if(p.trail.length>1) { ctx.beginPath(); ctx.moveTo(p.trail[0].x, p.trail[0].y); for(let i=1; i<p.trail.length; i++) ctx.lineTo(p.trail[i].x, p.trail[i].y); ctx.strokeStyle=p.color; ctx.globalAlpha=0.4; ctx.stroke(); ctx.globalAlpha=1.0; }
-                    ctx.beginPath(); ctx.arc(p.x, p.y, p.mass+3, 0, Math.PI*2); ctx.fillStyle = p.color; ctx.fill();
-                }); globalTime++;
+                    // Vệt đuôi sao chổi nhòa dần và dài ra
+                    if(p.trail.length>1) { 
+                        ctx.beginPath(); ctx.moveTo(p.trail[0].x, p.trail[0].y); 
+                        for(let i=1; i<p.trail.length; i++) ctx.lineTo(p.trail[i].x, p.trail[i].y); 
+                        ctx.strokeStyle = p.color; ctx.lineWidth = p.mass*0.6; ctx.lineCap='round'; ctx.lineJoin='round';
+                        ctx.globalAlpha = 0.5; ctx.shadowColor = p.color; ctx.shadowBlur = 10; ctx.stroke(); 
+                        ctx.globalAlpha = 1.0; ctx.shadowBlur = 0;
+                    }
+                    
+                    // Hành tinh 3D
+                    ctx.beginPath(); ctx.arc(p.x, p.y, p.mass+2, 0, Math.PI*2); 
+                    const pGrad = ctx.createRadialGradient(p.x-p.mass/2, p.y-p.mass/2, 0, p.x, p.y, p.mass+2);
+                    pGrad.addColorStop(0, '#ffffff'); pGrad.addColorStop(0.4, p.color); pGrad.addColorStop(1, '#000000');
+                    ctx.fillStyle = pGrad; ctx.fill();
+                }); 
             },
             loop() { if(currentSim !== 'gravity') return; this.update(); this.draw(); animationId = requestAnimationFrame(() => this.loop()); }
         };
@@ -577,39 +792,66 @@
             state: { n1: 1.0, n2: 1.52, angleIncidence: 45 }, origin: { x: 0, y: 0 },
             initPositions() { this.origin.x = canvas.width / 2; this.origin.y = canvas.height / 2; },
             init() { this.initPositions(); this.draw(); this.loop(); }, reset() { this.state.angleIncidence = 45; },
-            drawRay(ox, oy, sx, sy, ex, ey, color, w, pulse) { ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(ex, ey); ctx.strokeStyle=color; ctx.lineWidth=w; if(pulse&&!isPaused){ctx.setLineDash([20,10]); ctx.lineDashOffset=-globalTime*2;}else{ctx.setLineDash([]);} ctx.shadowBlur=15; ctx.shadowColor=color; ctx.stroke(); ctx.shadowBlur=0; ctx.setLineDash([]); },
+            drawRay(ox, oy, sx, sy, ex, ey, color, w, pulse) { 
+                ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(ex, ey); ctx.strokeStyle=color; ctx.lineWidth=w; 
+                if(pulse&&!isPaused){ctx.setLineDash([20,15]); ctx.lineDashOffset=-globalTime*4;}else{ctx.setLineDash([]);} 
+                ctx.shadowBlur=25; ctx.shadowColor=color; ctx.stroke(); ctx.stroke(); // Double stroke cho sáng
+                ctx.shadowBlur=0; ctx.setLineDash([]); 
+                ctx.strokeStyle='#ffffff'; ctx.lineWidth=w*0.3; ctx.beginPath(); ctx.moveTo(sx,sy); ctx.lineTo(ex,ey); ctx.stroke(); // Lõi trắng laser
+            },
             draw() {
                 if(!isPaused) globalTime += timeScale; 
                 ctx.clearRect(0,0,canvas.width,canvas.height); const ox = this.origin.x, oy = this.origin.y;
-                ctx.fillStyle='transparent'; ctx.fillRect(0,0,canvas.width,oy); ctx.fillStyle='rgba(167, 243, 208, 0.2)'; ctx.fillRect(0,oy,canvas.width,canvas.height-oy);
-                ctx.beginPath(); ctx.moveTo(0,oy); ctx.lineTo(canvas.width,oy); ctx.strokeStyle='rgba(255,255,255,0.8)'; ctx.lineWidth=3; ctx.stroke();
                 
+                // Môi trường Cực đại
+                ctx.fillStyle='#0f172a'; ctx.fillRect(0,0,canvas.width,canvas.height);
+                ctx.lineWidth = 1;
+                for(let i=0; i<canvas.width; i+=40) { ctx.strokeStyle = 'rgba(255,255,255, 0.03)'; ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke(); }
+                for(let i=0; i<canvas.height; i+=40) { ctx.strokeStyle = 'rgba(255,255,255, 0.03)'; ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(canvas.width, i); ctx.stroke(); }
+
+                // Khối vật chất (Kính/Nước) bóng bẩy
+                const m2Grad = ctx.createLinearGradient(0, oy, 0, canvas.height);
+                m2Grad.addColorStop(0, 'rgba(52, 211, 153, 0.4)'); m2Grad.addColorStop(1, 'rgba(4, 120, 87, 0.8)');
+                ctx.fillStyle=m2Grad; ctx.fillRect(0,oy,canvas.width,canvas.height-oy);
+                
+                // Ranh giới chói sáng
+                ctx.beginPath(); ctx.moveTo(0,oy); ctx.lineTo(canvas.width,oy); 
+                ctx.strokeStyle='rgba(255,255,255,0.9)'; ctx.lineWidth=3; ctx.shadowColor='#34d399'; ctx.shadowBlur=15; ctx.stroke(); ctx.shadowBlur=0;
+                
+                // Trục pháp tuyến
+                ctx.beginPath(); ctx.moveTo(ox, 0); ctx.lineTo(ox, canvas.height);
+                ctx.strokeStyle = 'rgba(255,255,255,0.3)'; ctx.setLineDash([10, 10]); ctx.lineWidth = 2; ctx.stroke(); ctx.setLineDash([]);
+
                 const rad1 = this.state.angleIncidence*Math.PI/180; const rL = Math.max(canvas.width, canvas.height);
                 const inX = ox - rL*Math.sin(rad1), inY = oy - rL*Math.cos(rad1);
                 
                 // Tia tới
-                this.drawRay(ox,oy, inX,inY, ox,oy, colors.danger, 4, true);
+                this.drawRay(ox,oy, inX,inY, ox,oy, '#f43f5e', 8, true);
                 
                 let hudT = "";
                 const sinT2 = (this.state.n1 / this.state.n2) * Math.sin(rad1);
                 
                 if(Math.abs(sinT2) > 1.0) {
                     // Phản xạ toàn phần
-                    this.drawRay(ox, oy, ox, oy, ox+rL*Math.sin(rad1), oy-rL*Math.cos(rad1), colors.danger, 4, true);
-                    hudT = '<span class="text-rose-400 font-bold animate-pulse">Phản xạ toàn phần!</span>';
+                    this.drawRay(ox, oy, ox, oy, ox+rL*Math.sin(rad1), oy-rL*Math.cos(rad1), '#f43f5e', 8, true);
+                    hudT = '<span class="text-rose-400 font-bold animate-pulse text-lg">PHẢN XẠ TOÀN PHẦN!</span>';
                 } else {
                     // Khúc xạ
                     const r2 = Math.asin(sinT2);
-                    this.drawRay(ox, oy, ox, oy, ox+rL*Math.sin(r2), oy+rL*Math.cos(r2), colors.danger, 4, true);
+                    this.drawRay(ox, oy, ox, oy, ox+rL*Math.sin(r2), oy+rL*Math.cos(r2), '#f43f5e', 8, true);
                     // Phản xạ yếu
-                    this.drawRay(ox, oy, ox, oy, ox+rL*Math.sin(rad1), oy-rL*Math.cos(rad1), 'rgba(244, 63, 94, 0.2)', 2, false);
-                    hudT = `Góc khúc xạ (θ₂): <span style="color:${colors.physics}">${(r2 * 180 / Math.PI).toFixed(1)}°</span>`;
+                    this.drawRay(ox, oy, ox, oy, ox+rL*Math.sin(rad1), oy-rL*Math.cos(rad1), 'rgba(244, 63, 94, 0.3)', 3, false);
+                    hudT = `Góc khúc xạ (θ₂): <span class="font-bold text-emerald-400 text-lg">${(r2 * 180 / Math.PI).toFixed(1)}°</span>`;
                 }
+
+                // Góc vẽ
+                ctx.beginPath(); ctx.arc(ox, oy, 60, -Math.PI/2, -Math.PI/2 - rad1, true);
+                ctx.strokeStyle = 'rgba(255,255,255,0.8)'; ctx.lineWidth = 2; ctx.stroke();
 
                 hudInfo.innerHTML = `<div>Môi trường 1 (n₁): <span style="color:${colors.physics}">${this.state.n1.toFixed(2)}</span></div>
                                      <div>Môi trường 2 (n₂): <span style="color:${colors.physics}">${this.state.n2.toFixed(2)}</span></div>
-                                     <div class="mt-2">Góc tới (θ₁): <span style="color:${colors.physics}">${this.state.angleIncidence.toFixed(1)}°</span></div>
-                                     <div>${hudT}</div>`;
+                                     <div class="mt-2">Góc tới (θ₁): <span class="text-white font-bold">${this.state.angleIncidence.toFixed(1)}°</span></div>
+                                     <div class="mt-2">${hudT}</div>`;
             },
             loop() { if(currentSim !== 'optics') return; this.draw(); animationId = requestAnimationFrame(() => this.loop()); }
         }
@@ -1117,16 +1359,16 @@
                     const r = canvas.getBoundingClientRect();
                     const cx = e.clientX - r.left; const cy = e.clientY - r.top;
                     const minDim = Math.min(canvas.width, canvas.height);
-                    const scale = minDim < 600 ? minDim / 600 : 1;
+                    const scale = minDim < 600 ? minDim / 600 : 1.2;
                     let unX = (cx - this.origin.x) / scale; let unY = (cy - this.origin.y) / scale;
                     
                     const hits = [
-                        { id: 'salivary', x: 20, y: -120, r: 15 }, { id: 'mouth', x: -10, y: -115, r: 20 },
-                        { id: 'esophagus', x: 5, y: -70, r: 20 }, { id: 'stomach', x: 20, y: 5, r: 25 },
-                        { id: 'liver', x: -15, y: -5, r: 35 }, { id: 'gallbladder', x: -10, y: 15, r: 10 },
-                        { id: 'pancreas', x: 15, y: 18, r: 15 }, { id: 'largeIntestine', x: 0, y: 60, r: 40 },
-                        { id: 'appendix', x: -28, y: 100, r: 15 }, { id: 'smallIntestine', x: 0, y: 60, r: 30 },
-                        { id: 'rectum', x: 10, y: 105, r: 20 }
+                        { id: 'salivary', x: 10, y: -125, r: 15 }, { id: 'mouth', x: -15, y: -118, r: 20 },
+                        { id: 'esophagus', x: 5, y: -70, r: 20 }, { id: 'stomach', x: 20, y: 0, r: 25 },
+                        { id: 'liver', x: -15, y: -10, r: 30 }, { id: 'gallbladder', x: -5, y: 8, r: 10 },
+                        { id: 'pancreas', x: 15, y: 15, r: 15 }, { id: 'largeIntestine', x: 0, y: 55, r: 40 },
+                        { id: 'appendix', x: -24, y: 85, r: 15 }, { id: 'smallIntestine', x: 0, y: 60, r: 25 },
+                        { id: 'rectum', x: 15, y: 95, r: 20 }
                     ];
                     const orderedHits = ['appendix', 'gallbladder', 'pancreas', 'salivary', 'mouth', 'esophagus', 'stomach', 'smallIntestine', 'liver', 'largeIntestine', 'rectum'];
                     for(let id of orderedHits) {
@@ -1151,98 +1393,191 @@
                 
                 ctx.save(); ctx.translate(ox, oy); ctx.scale(scale, scale); ctx.translate(-ox, -oy);
 
-                ctx.fillStyle = 'rgba(148, 163, 184, 0.1)'; ctx.strokeStyle = 'rgba(148, 163, 184, 0.2)'; ctx.lineWidth = 2;
+                // 1. Bóng người (Con người hoàn chỉnh) - Đồ họa cực đại
+                const skinGrad = ctx.createLinearGradient(ox - 80, oy - 180, ox + 80, oy + 150);
+                skinGrad.addColorStop(0, 'rgba(255, 237, 213, 0.15)'); // Cam nhạt
+                skinGrad.addColorStop(1, 'rgba(253, 186, 116, 0.05)'); 
+                ctx.fillStyle = skinGrad;
+                ctx.strokeStyle = 'rgba(214, 211, 209, 0.4)'; ctx.lineWidth = 2.5;
+                
                 ctx.beginPath(); 
-                ctx.arc(ox + 10, oy - 150, 35, -Math.PI/2, Math.PI*0.8); 
-                ctx.bezierCurveTo(ox - 30, oy - 145, ox - 35, oy - 135, ox - 35, oy - 130); 
-                ctx.lineTo(ox - 25, oy - 125); ctx.lineTo(ox - 35, oy - 120); ctx.lineTo(ox - 25, oy - 115); 
-                ctx.lineTo(ox - 30, oy - 110); ctx.lineTo(ox - 15, oy - 95); ctx.lineTo(ox - 50, oy - 70); 
-                ctx.lineTo(ox - 80, oy + 50); ctx.lineTo(ox - 50, oy + 50); ctx.lineTo(ox - 45, oy + 120); 
-                ctx.lineTo(ox + 45, oy + 120); ctx.lineTo(ox + 50, oy + 50); ctx.lineTo(ox + 80, oy + 50); 
-                ctx.lineTo(ox + 50, oy - 70); ctx.lineTo(ox + 30, oy - 90); ctx.closePath();
+                // Đỉnh đầu
+                ctx.moveTo(ox + 5, oy - 175);
+                ctx.bezierCurveTo(ox + 35, oy - 170, ox + 45, oy - 130, ox + 35, oy - 100); // Gáy
+                ctx.bezierCurveTo(ox + 30, oy - 80, ox + 40, oy - 75, ox + 65, oy - 60); // Vai phải
+                ctx.lineTo(ox + 95, oy + 20); // Cánh tay phải
+                ctx.lineTo(ox + 75, oy + 25); // Mặt trong tay phải
+                ctx.bezierCurveTo(ox + 60, oy - 30, ox + 55, oy - 35, ox + 50, oy - 10); // Nách phải
+                ctx.bezierCurveTo(ox + 55, oy + 50, ox + 50, oy + 100, ox + 55, oy + 150); // Hông & Chân phải
+                ctx.lineTo(ox + 15, oy + 150); // Đùi phải
+                ctx.bezierCurveTo(ox + 10, oy + 100, ox + 5, oy + 100, ox, oy + 130); // Đáy chậu
+                ctx.bezierCurveTo(ox - 5, oy + 100, ox - 10, oy + 100, ox - 15, oy + 150); // Đùi trái
+                ctx.lineTo(ox - 55, oy + 150); // Chân trái ngoài
+                ctx.bezierCurveTo(ox - 50, oy + 100, ox - 55, oy + 50, ox - 50, oy - 10); // Hông & Bụng trái
+                ctx.bezierCurveTo(ox - 55, oy - 35, ox - 60, oy - 30, ox - 75, oy + 25); // Nách trái & tay trái trong
+                ctx.lineTo(ox - 95, oy + 20); // Cánh tay trái ngoài
+                ctx.lineTo(ox - 65, oy - 60); // Vai trái
+                ctx.bezierCurveTo(ox - 40, oy - 75, ox - 25, oy - 80, ox - 20, oy - 90); // Cổ trước
+                ctx.lineTo(ox - 22, oy - 95); // Dưới cằm
+                ctx.quadraticCurveTo(ox - 35, oy - 98, ox - 35, oy - 105); // Cằm
+                ctx.lineTo(ox - 30, oy - 110); // Môi dưới
+                ctx.lineTo(ox - 42, oy - 115); // KHOANG MIỆNG MỞ
+                ctx.lineTo(ox - 30, oy - 120); // Môi trên
+                ctx.quadraticCurveTo(ox - 40, oy - 125, ox - 35, oy - 135); // Mũi
+                ctx.quadraticCurveTo(ox - 25, oy - 135, ox - 25, oy - 145); // Gốc mũi / Mắt
+                ctx.quadraticCurveTo(ox - 25, oy - 165, ox + 5, oy - 175); // Trán & Đỉnh đầu
+                ctx.closePath();
                 ctx.fill(); ctx.stroke();
 
-                ctx.globalAlpha = 0.95; ctx.shadowColor = 'rgba(0, 0, 0, 0.5)'; ctx.shadowBlur = 10; ctx.shadowOffsetX = 3; ctx.shadowOffsetY = 5;
+                // Vẽ thêm tai và mắt mờ
+                ctx.beginPath(); ctx.ellipse(ox + 15, oy - 120, 6, 10, 0.2, 0, Math.PI*2); ctx.stroke(); // Tai
+                ctx.beginPath(); ctx.moveTo(ox - 15, oy - 135); ctx.lineTo(ox - 10, oy - 135); ctx.stroke(); // Mắt nhắm
 
-                const salGrad = ctx.createRadialGradient(ox+15, oy-125, 2, ox+15, oy-125, 10); salGrad.addColorStop(0, '#fde68a'); salGrad.addColorStop(1, '#d97706');
-                ctx.fillStyle = salGrad; ctx.beginPath(); ctx.ellipse(ox + 15, oy - 125, 8, 12, 0.5, 0, Math.PI*2); ctx.fill();
-                ctx.beginPath(); ctx.ellipse(ox + 25, oy - 115, 10, 6, -0.2, 0, Math.PI*2); ctx.fill();
+                ctx.globalAlpha = 0.95; 
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.5)'; ctx.shadowBlur = 10; ctx.shadowOffsetX = 3; ctx.shadowOffsetY = 5;
+
+                // 2. Tuyến nước bọt (Salivary Gland) - Cam/Vàng
+                ctx.fillStyle = '#f59e0b'; 
+                ctx.beginPath(); ctx.ellipse(ox + 10, oy - 130, 8, 12, 0.5, 0, Math.PI*2); ctx.fill();
+                ctx.beginPath(); ctx.ellipse(ox + 15, oy - 120, 10, 6, -0.2, 0, Math.PI*2); ctx.fill();
 
                 ctx.shadowColor = 'transparent';
 
-                const esoGrad = ctx.createLinearGradient(ox, oy-115, ox+10, oy-20); esoGrad.addColorStop(0, '#f472b6'); esoGrad.addColorStop(1, '#e11d48');
-                ctx.strokeStyle = esoGrad; ctx.lineWidth = 8; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-                ctx.beginPath(); ctx.moveTo(ox - 25, oy - 115); ctx.lineTo(ox + 5, oy - 115); ctx.quadraticCurveTo(ox + 10, oy - 115, ox + 10, oy - 100); ctx.lineTo(ox + 5, oy - 20); ctx.stroke();
+                // 3. Khoang miệng & Thực quản (Mouth & Esophagus) - Hồng (#f472b6)
+                ctx.strokeStyle = '#f472b6'; ctx.lineWidth = 10; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+                ctx.beginPath(); 
+                ctx.moveTo(ox - 25, oy - 118); // Miệng
+                ctx.lineTo(ox + 5, oy - 118); // Cổ họng
+                ctx.lineTo(ox + 5, oy - 20); // Dọc xuống dạ dày
+                ctx.stroke();
 
                 ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
 
-                const stomGrad = ctx.createRadialGradient(ox+15, oy, 5, ox+15, oy, 30); stomGrad.addColorStop(0, '#f472b6'); stomGrad.addColorStop(1, '#9d174d');
-                ctx.fillStyle = stomGrad; ctx.strokeStyle = '#831843'; ctx.lineWidth = 1.5;
-                ctx.beginPath(); ctx.moveTo(ox + 5, oy - 20); ctx.bezierCurveTo(ox + 40, oy - 30, ox + 50, oy + 10, ox + 20, oy + 20); ctx.bezierCurveTo(ox + 5, oy + 25, ox - 5, oy + 15, ox + 10, oy + 10); ctx.bezierCurveTo(ox + 20, oy + 5, ox + 15, oy - 15, ox + 5, oy - 20); ctx.fill(); ctx.stroke();
+                // 4. Tuyến tụy (Pancreas) - Vàng (#fde047)
+                ctx.fillStyle = '#fde047'; ctx.strokeStyle = '#ca8a04'; ctx.lineWidth = 1.5;
+                ctx.beginPath(); ctx.ellipse(ox + 15, oy + 15, 18, 6, 0.1, 0, Math.PI*2); ctx.fill(); ctx.stroke();
 
-                ctx.shadowColor = 'transparent'; ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-                ctx.beginPath(); ctx.moveTo(ox + 15, oy - 10); ctx.quadraticCurveTo(ox + 25, oy, ox + 15, oy + 10); ctx.stroke();
-                ctx.beginPath(); ctx.moveTo(ox + 25, oy - 5); ctx.quadraticCurveTo(ox + 35, oy + 5, ox + 25, oy + 15); ctx.stroke();
-                
-                ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
-
-                const panGrad = ctx.createLinearGradient(ox, oy+18, ox+30, oy+18); panGrad.addColorStop(0, '#fef08a'); panGrad.addColorStop(1, '#ca8a04');
-                ctx.fillStyle = panGrad; ctx.strokeStyle = '#a16207'; ctx.beginPath(); ctx.ellipse(ox + 15, oy + 18, 18, 6, 0.2, 0, Math.PI*2); ctx.fill(); ctx.stroke();
-
-                const liverGrad = ctx.createRadialGradient(ox-10, oy-15, 5, ox-10, oy-15, 45); liverGrad.addColorStop(0, '#b91c1c'); liverGrad.addColorStop(1, '#450a0a');
+                // 5. Gan (Liver) - Đỏ sẫm (#991b1b)
+                const liverGrad = ctx.createLinearGradient(ox-40, oy-30, ox, oy);
+                liverGrad.addColorStop(0, '#b91c1c'); liverGrad.addColorStop(1, '#7f1d1d');
                 ctx.fillStyle = liverGrad; ctx.strokeStyle = '#450a0a';
-                ctx.beginPath(); ctx.moveTo(ox + 10, oy - 25); ctx.bezierCurveTo(ox - 10, oy - 40, ox - 45, oy - 25, ox - 45, oy); ctx.bezierCurveTo(ox - 40, oy + 15, ox - 10, oy + 15, ox + 10, oy - 5); ctx.bezierCurveTo(ox + 20, oy - 15, ox + 15, oy - 20, ox + 10, oy - 25); ctx.fill(); ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(ox + 10, oy - 25);
+                ctx.bezierCurveTo(ox - 10, oy - 40, ox - 45, oy - 25, ox - 45, oy + 5);
+                ctx.bezierCurveTo(ox - 30, oy + 15, ox - 10, oy + 10, ox + 15, oy - 5);
+                ctx.fill(); ctx.stroke();
 
-                ctx.shadowColor = 'transparent'; ctx.strokeStyle = 'rgba(0,0,0,0.3)';
-                ctx.beginPath(); ctx.moveTo(ox - 10, oy - 30); ctx.quadraticCurveTo(ox - 5, oy - 15, ox + 5, oy - 5); ctx.stroke();
-                ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+                // 6. Túi mật (Gallbladder) - Xanh lá (#16a34a)
+                ctx.fillStyle = '#16a34a'; ctx.strokeStyle = '#064e3b';
+                ctx.beginPath(); ctx.ellipse(ox - 5, oy + 8, 5, 8, -Math.PI/4, 0, Math.PI*2); ctx.fill(); ctx.stroke();
 
-                const gallGrad = ctx.createRadialGradient(ox-10, oy+12, 1, ox-10, oy+12, 6); gallGrad.addColorStop(0, '#4ade80'); gallGrad.addColorStop(1, '#064e3b');
-                ctx.fillStyle = gallGrad; ctx.strokeStyle = '#022c22'; ctx.beginPath(); ctx.ellipse(ox - 10, oy + 12, 5, 8, -0.5, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+                // 7. Dạ dày (Stomach) - Hồng đậm (#db2777)
+                const stomGrad = ctx.createRadialGradient(ox+15, oy-5, 5, ox+15, oy-5, 30);
+                stomGrad.addColorStop(0, '#f472b6'); stomGrad.addColorStop(1, '#be185d');
+                ctx.fillStyle = stomGrad; ctx.strokeStyle = '#831843';
+                ctx.beginPath();
+                ctx.moveTo(ox + 5, oy - 20);
+                ctx.bezierCurveTo(ox + 35, oy - 30, ox + 45, oy + 10, ox + 25, oy + 20);
+                ctx.bezierCurveTo(ox + 10, oy + 25, ox, oy + 15, ox + 5, oy + 5);
+                ctx.bezierCurveTo(ox + 15, oy, ox + 15, oy - 10, ox + 5, oy - 20);
+                ctx.fill(); ctx.stroke();
 
                 ctx.shadowColor = 'transparent';
 
-                ctx.strokeStyle = '#f43f5e'; ctx.lineWidth = 7;
-                ctx.beginPath(); ctx.moveTo(ox + 20, oy + 20); ctx.quadraticCurveTo(ox + 5, oy + 30, ox - 10, oy + 25); ctx.stroke();
-
+                // 8. Đại tràng (Large Intestine) - Màu cam/nâu (#d97706)
                 ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
-                const colonGrad = ctx.createLinearGradient(ox-25, oy+35, ox+25, oy+85); colonGrad.addColorStop(0, '#d97706'); colonGrad.addColorStop(1, '#92400e');
-                ctx.strokeStyle = colonGrad; ctx.lineWidth = 16; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
-                ctx.beginPath(); ctx.moveTo(ox - 25, oy + 85); ctx.lineTo(ox - 25, oy + 35); ctx.lineTo(ox + 25, oy + 35); ctx.lineTo(ox + 25, oy + 85); ctx.stroke();
+                ctx.strokeStyle = '#b45309'; ctx.lineWidth = 18; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+                ctx.beginPath();
+                ctx.moveTo(ox - 28, oy + 75); // Manh tràng
+                ctx.lineTo(ox - 28, oy + 35); // Lên
+                ctx.lineTo(ox + 28, oy + 35); // Ngang
+                ctx.lineTo(ox + 28, oy + 75); // Xuống
+                ctx.stroke();
                 
-                ctx.shadowColor = 'transparent'; ctx.strokeStyle = '#78350f'; ctx.lineWidth = 2;
-                for(let i=0; i<=50; i+=6) { ctx.beginPath(); ctx.moveTo(ox - 33, oy + 85 - i); ctx.lineTo(ox - 17, oy + 85 - i); ctx.stroke(); ctx.beginPath(); ctx.moveTo(ox + 33, oy + 85 - i); ctx.lineTo(ox + 17, oy + 85 - i); ctx.stroke(); }
-                for(let i=0; i<=50; i+=6) { ctx.beginPath(); ctx.moveTo(ox - 25 + i, oy + 27); ctx.lineTo(ox - 25 + i, oy + 43); ctx.stroke(); }
+                // Ngấn đại tràng
+                ctx.shadowColor = 'transparent';
+                ctx.strokeStyle = '#78350f'; ctx.lineWidth = 2;
+                for(let i=0; i<=40; i+=8) {
+                    ctx.beginPath(); ctx.moveTo(ox - 36, oy + 75 - i); ctx.lineTo(ox - 20, oy + 75 - i); ctx.stroke();
+                    ctx.beginPath(); ctx.moveTo(ox + 36, oy + 75 - i); ctx.lineTo(ox + 20, oy + 75 - i); ctx.stroke();
+                }
+                for(let i=0; i<=56; i+=8) {
+                    ctx.beginPath(); ctx.moveTo(ox - 28 + i, oy + 26); ctx.lineTo(ox - 28 + i, oy + 44); ctx.stroke();
+                }
 
+                // 9. Ruột non (Small Intestine) - Hồng nhạt Zigzag (#fca5a5)
                 ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
-                const smallGrad = ctx.createLinearGradient(ox-15, oy+25, ox+15, oy+85); smallGrad.addColorStop(0, '#fca5a5'); smallGrad.addColorStop(1, '#e11d48');
-                ctx.strokeStyle = smallGrad; ctx.lineWidth = 12; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
-                const drawSI = (paths) => { paths.forEach(pts => { ctx.beginPath(); ctx.moveTo(pts[0], pts[1]); for(let i=2; i<pts.length; i+=2) ctx.lineTo(pts[i], pts[i+1]); ctx.stroke(); }); };
-                drawSI([ [ox - 10, oy + 25, ox + 15, oy + 45], [ox + 15, oy + 45, ox - 15, oy + 55], [ox - 15, oy + 55, ox + 15, oy + 65], [ox + 15, oy + 65, ox - 15, oy + 75], [ox - 15, oy + 75, ox + 10, oy + 85], [ox + 10, oy + 85, ox - 20, oy + 80] ]);
+                ctx.strokeStyle = '#fca5a5'; ctx.lineWidth = 14; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+                ctx.beginPath();
+                ctx.moveTo(ox + 5, oy + 15);
+                ctx.lineTo(ox - 15, oy + 45); // Zigzag 1
+                ctx.lineTo(ox + 15, oy + 55); // Zigzag 2
+                ctx.lineTo(ox - 15, oy + 65); // Zigzag 3
+                ctx.lineTo(ox + 10, oy + 75); // Zigzag 4
+                ctx.lineTo(ox - 28, oy + 75); // Nối manh tràng
+                ctx.stroke();
 
+                // 10. Ruột thừa (Appendix) - Cam
                 ctx.strokeStyle = '#b45309'; ctx.lineWidth = 6; ctx.lineCap = 'round';
-                ctx.beginPath(); ctx.moveTo(ox - 25, oy + 85); ctx.quadraticCurveTo(ox - 32, oy + 95, ox - 28, oy + 100); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(ox - 28, oy + 75); ctx.lineTo(ox - 20, oy + 95); ctx.stroke();
 
+                // 11. Trực tràng / Hậu môn (Rectum) - Cam
                 ctx.strokeStyle = '#b45309'; ctx.lineWidth = 12; ctx.lineCap = 'round';
-                ctx.beginPath(); ctx.moveTo(ox + 25, oy + 85); ctx.quadraticCurveTo(ox + 5, oy + 95, ox + 10, oy + 115); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(ox + 28, oy + 75); ctx.quadraticCurveTo(ox + 10, oy + 85, ox + 5, oy + 115); ctx.stroke();
 
                 ctx.shadowColor = 'transparent';
 
+                // THỨC ĂN DI CHUYỂN BÁM SÁT ZIGZAG
                 if (this.state.isEating) {
                     const p = this.state.foodProgress; let fx = 0, fy = 0;
-                    if(p < 0.1) { fx = ox - 25 + p*10*30; fy = oy - 115; } else if(p < 0.3) { fx = ox + 5; fy = oy - 115 + (p-0.1)*5*95; } else if(p < 0.4) { fx = ox + 5 + Math.sin((p-0.3)*10*Math.PI)*15; fy = oy - 20 + (p-0.3)*10*40; } else if(p < 0.7) { let sp = (p-0.4)*3.33; fx = ox + Math.sin(sp*Math.PI*5)*15; fy = oy + 25 + sp*55; } else if(p < 0.9) { let lp = (p-0.7)*5; if(lp < 0.33) { fx = ox - 25; fy = oy + 85 - lp*3*50; } else if(lp < 0.66) { fx = ox - 25 + (lp-0.33)*3*50; fy = oy + 35; } else { fx = ox + 25; fy = oy + 35 + (lp-0.66)*3*50; } } else { let rp = (p-0.9)*10; fx = ox + 25 - rp*15; fy = oy + 85 + rp*30; }
+                    if(p < 0.1) { fx = ox - 25 + (p/0.1)*30; fy = oy - 118; } 
+                    else if(p < 0.3) { fx = ox + 5; fy = oy - 118 + ((p-0.1)/0.2)*98; } 
+                    else if(p < 0.4) { fx = ox + 5 + ((p-0.3)/0.1)*15; fy = oy - 20 + ((p-0.3)/0.1)*20; } 
+                    else if(p < 0.7) { 
+                        // Chạy nội suy qua 5 đoạn Zigzag ruột non
+                        let sp = (p-0.4)/0.3; 
+                        if (sp < 0.2) { fx = ox + 5 - (sp/0.2)*20; fy = oy + 15 + (sp/0.2)*30; }
+                        else if (sp < 0.4) { fx = ox - 15 + ((sp-0.2)/0.2)*30; fy = oy + 45 + ((sp-0.2)/0.2)*10; }
+                        else if (sp < 0.6) { fx = ox + 15 - ((sp-0.4)/0.2)*30; fy = oy + 55 + ((sp-0.4)/0.2)*10; }
+                        else if (sp < 0.8) { fx = ox - 15 + ((sp-0.6)/0.2)*25; fy = oy + 65 + ((sp-0.6)/0.2)*10; }
+                        else { fx = ox + 10 - ((sp-0.8)/0.2)*38; fy = oy + 75; }
+                    } 
+                    else if(p < 0.9) { 
+                        let lp = (p-0.7)/0.2; 
+                        if(lp < 0.33) { fx = ox - 28; fy = oy + 75 - (lp/0.33)*40; } 
+                        else if(lp < 0.66) { fx = ox - 28 + ((lp-0.33)/0.33)*56; fy = oy + 35; } 
+                        else { fx = ox + 28; fy = oy + 35 + ((lp-0.66)/0.34)*40; } 
+                    } 
+                    else { 
+                        let rp = (p-0.9)/0.1; 
+                        fx = ox + 28 - rp*23; fy = oy + 75 + rp*40; 
+                    }
                     ctx.fillStyle = '#65a30d'; ctx.beginPath(); ctx.arc(fx, fy, 6, 0, Math.PI*2); ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.stroke();
                 }
 
+                // VẼ NHÃN (LABELS)
                 if(this.state.showLabels && !this.state.selectedOrgan) {
                     ctx.fillStyle = 'white'; ctx.font = '13px Inter'; ctx.strokeStyle = 'rgba(255,255,255,0.7)'; ctx.lineWidth = 1.5; ctx.shadowColor = 'black'; ctx.shadowBlur = 4;
                     const drawLabel = (lx, ly, text, tx, ty) => { ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(tx, ty); ctx.stroke(); let textW = ctx.measureText(text).width; ctx.fillText(text, tx + (tx>lx?5:-textW-5), ty + 4); };
-                    drawLabel(ox - 25, oy - 115, "Khoang miệng", ox - 90, oy - 125); drawLabel(ox + 15, oy - 125, "Tuyến nước bọt", ox + 80, oy - 130); drawLabel(ox + 5, oy - 60, "Thực quản", ox + 80, oy - 70); drawLabel(ox - 25, oy - 10, "Gan", ox - 100, oy - 20); drawLabel(ox + 30, oy, "Dạ dày", ox + 100, oy - 5); drawLabel(ox - 10, oy + 12, "Túi mật", ox - 100, oy + 10); drawLabel(ox + 15, oy + 18, "Tuyến tụy", ox + 100, oy + 25); drawLabel(ox - 25, oy + 50, "Đại tràng", ox - 110, oy + 50); drawLabel(ox + 15, oy + 50, "Ruột non", ox + 110, oy + 60); drawLabel(ox - 28, oy + 100, "Ruột thừa", ox - 100, oy + 110); drawLabel(ox, oy + 110, "Hậu môn", ox - 80, oy + 130); drawLabel(ox + 10, oy + 100, "Trực tràng", ox + 100, oy + 110);
+                    
+                    drawLabel(ox - 25, oy - 118, "Khoang miệng", ox - 90, oy - 125); 
+                    drawLabel(ox + 10, oy - 130, "Tuyến nước bọt", ox + 80, oy - 130); 
+                    drawLabel(ox + 5, oy - 60, "Thực quản", ox + 80, oy - 70); 
+                    drawLabel(ox - 20, oy - 10, "Gan", ox - 100, oy - 20); 
+                    drawLabel(ox + 20, oy + 5, "Dạ dày", ox + 100, oy - 5); 
+                    drawLabel(ox - 5, oy + 8, "Túi mật", ox - 100, oy + 10); 
+                    drawLabel(ox + 15, oy + 15, "Tuyến tụy", ox + 100, oy + 25); 
+                    drawLabel(ox - 28, oy + 50, "Đại tràng", ox - 110, oy + 50); 
+                    drawLabel(ox + 5, oy + 55, "Ruột non", ox + 110, oy + 60); 
+                    drawLabel(ox - 25, oy + 90, "Ruột thừa", ox - 100, oy + 100); 
+                    drawLabel(ox + 5, oy + 110, "Hậu môn", ox - 80, oy + 125); 
+                    drawLabel(ox + 15, oy + 95, "Trực tràng", ox + 100, oy + 105);
                     ctx.shadowBlur = 0;
                 }
 
                 ctx.restore(); 
                 
+                // HIỂN THỊ MODAL BẢNG CHI TIẾT
                 if(this.state.selectedOrgan) {
                     ctx.fillStyle = 'rgba(15, 23, 42, 0.75)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
                     const modalW = Math.min(450, canvas.width - 40); const modalH = 220; const mx = canvas.width/2 - modalW/2; const my = canvas.height/2 - modalH/2;
@@ -1262,10 +1597,10 @@
         };
 
         // ==========================================
-        // BIOLOGY SIMULATION: TẾ BÀO ĐỘNG VẬT (ANIMAL CELL)
+        // BIOLOGY SIMULATION: TẾ BÀO (CELL ANATOMY)
         // ==========================================
         simulations.cell = {
-            state: { activity: 1.0, showLabels: true, selectedOrganelle: null },
+            state: { activity: 1.0, showLabels: true, selectedOrganelle: null, cellType: 'animal', labelHits: [] },
             origin: { x: 0, y: 0 },
             initPositions() { this.origin.x = canvas.width / 2; this.origin.y = canvas.height / 2; },
             init() { this.initPositions(); this.reset(); this.setupInteraction(); this.loop(); },
@@ -1277,23 +1612,59 @@
                     
                     const r = canvas.getBoundingClientRect();
                     const cx = e.clientX - r.left; const cy = e.clientY - r.top;
-                    const minDim = Math.min(canvas.width, canvas.height);
-                    const scale = minDim < 600 ? minDim / 600 : 1;
                     
-                    let unX = (cx - this.origin.x) / scale; let unY = (cy - this.origin.y) / scale;
-                    
-                    const hits = [
-                        { id: 'nucleolus', x: -5, y: -20, r: 25 }, { id: 'nucleus', x: -20, y: -30, r: 60 },
-                        { id: 'golgi', x: 90, y: -20, r: 35 }, { id: 'mito', x: -60, y: 80, r: 30 }, { id: 'mito', x: 80, y: 100, r: 30 }, { id: 'mito', x: 10, y: -120, r: 30 },
-                        { id: 'lysosome', x: -100, y: -20, r: 25 }, { id: 'lysosome', x: 40, y: 120, r: 25 }, { id: 'lysosome', x: -40, y: 140, r: 25 },
-                        { id: 'centrosome', x: 120, y: 30, r: 30 }, { id: 'rer', x: -80, y: 30, r: 40 }, { id: 'ser', x: 70, y: 50, r: 35 },
+                    let type = this.state.cellType || 'animal';
+                    let minDim = Math.min(canvas.width, canvas.height);
+                    let baseScale = minDim < 600 ? minDim / 600 : 1;
+                    let scales = type === 'compare' ? 0.55 : 1;
+                    let totalScale = baseScale * scales;
+
+                    // 1. Ưu tiên kiểm tra va chạm với các chữ Nhãn chú thích (Click-to-Label)
+                    if (this.state.showLabels && type !== 'compare' && this.state.labelHits) {
+                        let unX = (cx - this.origin.x) / baseScale;
+                        let unY = (cy - this.origin.y) / baseScale;
+                        for (let l of this.state.labelHits) {
+                            if (Math.abs(unX - l.x) < l.w/2 && Math.abs(unY - l.y) < l.h/2) {
+                                this.state.selectedOrganelle = l.id;
+                                return;
+                            }
+                        }
+                    }
+
+                    // 2. Kiểm tra va chạm với khu vực Bào quan
+                    const animalHits = [
+                        { id: 'nucleolus', x: -5, y: -20, r: 25 }, { id: 'nucleus', x: -20, y: -10, r: 60 },
+                        { id: 'golgi', x: 60, y: 60, r: 35 }, { id: 'mito', x: -80, y: 50, r: 30 }, { id: 'mito', x: 90, y: -40, r: 30 }, { id: 'mito', x: 10, y: 110, r: 30 },
+                        { id: 'lysosome', x: -60, y: -90, r: 20 }, { id: 'lysosome', x: 100, y: 20, r: 20 }, { id: 'lysosome', x: 40, y: 130, r: 20 },
+                        { id: 'centrosome', x: 40, y: -80, r: 25 }, { id: 'rer', x: -20, y: -10, r: 90 }, { id: 'ribosome', x: -120, y: -80, r: 30 },
                         { id: 'cytoplasm', x: 0, y: 0, r: 160 }, { id: 'membrane', x: 0, y: 0, r: 190 }
                     ];
-                    
-                    for(let h of hits) {
-                        if (Math.hypot(unX - h.x, unY - h.y) < h.r) { 
-                            this.state.selectedOrganelle = h.id; 
-                            break; 
+
+                    const plantHits = [
+                        { id: 'chloroplast', x: -100, y: -20, r: 30 }, { id: 'chloroplast', x: -80, y: 80, r: 30 }, { id: 'chloroplast', x: 20, y: -110, r: 30 },
+                        { id: 'vacuole', x: 60, y: 40, r: 80 },
+                        { id: 'nucleolus', x: -50, y: -50, r: 20 }, { id: 'nucleus', x: -60, y: -50, r: 45 },
+                        { id: 'mito', x: -30, y: 100, r: 25 }, { id: 'mito', x: 80, y: -100, r: 25 },
+                        { id: 'golgi', x: -40, y: 90, r: 30 },
+                        { id: 'cellwall', x: 0, y: 0, r: 180 }, { id: 'membrane', x: 0, y: 0, r: 160 }
+                    ];
+
+                    let offsets = [];
+                    if(type === 'animal') offsets.push({x: 0, h: animalHits});
+                    else if(type === 'plant') offsets.push({x: 0, h: plantHits});
+                    else if(type === 'compare') {
+                        offsets.push({x: -180, h: animalHits});
+                        offsets.push({x: 180, h: plantHits});
+                    }
+
+                    for (let offset of offsets) {
+                        let unX = (cx - this.origin.x) / totalScale - offset.x;
+                        let unY = (cy - this.origin.y) / totalScale;
+                        for (let h of offset.h) {
+                            if (Math.hypot(unX - h.x, unY - h.y) < h.r) { 
+                                this.state.selectedOrganelle = h.id; 
+                                return;
+                            }
                         }
                     }
                 };
@@ -1302,49 +1673,88 @@
                 this.state.showLabels = !this.state.showLabels;
                 const btn = document.getElementById('btn-cell-labels');
                 if(btn) {
-                    btn.className = `w-12 h-6 rounded-full ${this.state.showLabels ? 'bg-bio-500' : 'bg-slate-600'} relative transition-colors duration-300 focus:outline-none`;
-                    btn.children[0].className = `w-4 h-4 rounded-full bg-white absolute top-1 transition-transform duration-300 ${this.state.showLabels ? 'translate-x-7' : 'translate-x-1'}`;
+                    btn.className = `w-10 h-5 rounded-full ${this.state.showLabels ? 'bg-emerald-500' : 'bg-slate-600'} relative transition-colors duration-300 focus:outline-none`;
+                    btn.children[0].className = `w-3 h-3 rounded-full bg-white absolute top-1 transition-transform duration-300 ${this.state.showLabels ? 'translate-x-6' : 'translate-x-1'}`;
                 }
             },
             update() {
                 if(!isPaused && !this.state.selectedOrganelle) globalTime += timeScale * this.state.activity;
+                
+                let title = "Tế Bào Động Vật";
+                if(this.state.cellType === 'plant') title = "Tế Bào Thực Vật";
+                if(this.state.cellType === 'compare') title = "So Sánh Tế Bào";
+
                 hudInfo.innerHTML = `
-                    <div class="text-bio-400 font-bold mb-1"><i class="fa-solid fa-microscope"></i> Giải phẫu Tế Bào Động Vật</div>
-                    <div class="text-xs text-slate-300 mb-2 italic animate-pulse">👉 Click vào các bào quan để phóng to</div>
+                    <div class="text-bio-400 font-bold mb-1"><i class="fa-solid fa-microscope"></i> Vi mô: ${title}</div>
+                    <div class="text-xs text-slate-300 mb-2 italic animate-pulse">👉 Click vào các bào quan hoặc chữ chú thích</div>
                     <div>Nhân: <span class="text-white">Trung tâm điều khiển</span></div>
-                    <div>Ty thể: <span class="text-white">Nhà máy năng lượng</span></div>
-                    <div>Ribosome: <span class="text-white">Tổng hợp Protein</span></div>
+                    <div>Ti thể: <span class="text-white">Nhà máy năng lượng</span></div>
+                    ${this.state.cellType === 'plant' || this.state.cellType === 'compare' ? `<div>Lục lạp: <span class="text-white">Thực hiện quang hợp</span></div>` : `<div>Ribosome: <span class="text-white">Tổng hợp Protein</span></div>`}
                 `;
             },
             drawMito(x, y, angle, scale) {
                 ctx.save(); ctx.translate(x, y); ctx.rotate(angle); ctx.scale(scale, scale);
                 const mGrad = ctx.createRadialGradient(0,-5, 2, 0,0, 25);
-                mGrad.addColorStop(0, '#38bdf8'); mGrad.addColorStop(1, '#0284c7');
+                mGrad.addColorStop(0, '#60a5fa'); mGrad.addColorStop(1, '#2563eb');
                 ctx.fillStyle = mGrad;
                 ctx.beginPath(); ctx.ellipse(0, 0, 25, 12, 0, 0, Math.PI*2); ctx.fill();
-                ctx.lineWidth = 1.5; ctx.strokeStyle = '#0c4a6e'; ctx.stroke();
+                ctx.lineWidth = 1.5; ctx.strokeStyle = '#1e3a8a'; ctx.stroke();
                 ctx.beginPath(); 
                 ctx.moveTo(-18, 0); ctx.lineTo(-12, -8); ctx.lineTo(-6, 8); ctx.lineTo(0, -8); ctx.lineTo(6, 8); ctx.lineTo(12, -8); ctx.lineTo(18, 0);
-                ctx.strokeStyle = '#bae6fd'; ctx.stroke();
+                ctx.strokeStyle = '#bfdbfe'; ctx.stroke();
                 ctx.restore();
             },
-            drawGolgi(x, y, angle) {
-                ctx.save(); ctx.translate(x, y); ctx.rotate(angle);
-                ctx.fillStyle = '#f43f5e'; ctx.strokeStyle = '#881337'; ctx.lineWidth = 2;
+            drawMitoRed(x, y, angle, scale) {
+                ctx.save(); ctx.translate(x, y); ctx.rotate(angle); ctx.scale(scale, scale);
+                const mGrad = ctx.createRadialGradient(0,-5, 2, 0,0, 25);
+                mGrad.addColorStop(0, '#fca5a5'); mGrad.addColorStop(1, '#dc2626');
+                ctx.fillStyle = mGrad;
+                ctx.beginPath(); ctx.ellipse(0, 0, 25, 12, 0, 0, Math.PI*2); ctx.fill();
+                ctx.lineWidth = 1.5; ctx.strokeStyle = '#7f1d1d'; ctx.stroke();
+                ctx.beginPath(); 
+                ctx.moveTo(-18, 0); ctx.lineTo(-12, -8); ctx.lineTo(-6, 8); ctx.lineTo(0, -8); ctx.lineTo(6, 8); ctx.lineTo(12, -8); ctx.lineTo(18, 0);
+                ctx.strokeStyle = '#fee2e2'; ctx.stroke();
+                ctx.restore();
+            },
+            drawChloroplast(x, y, angle, scale) {
+                ctx.save(); ctx.translate(x, y); ctx.rotate(angle); ctx.scale(scale, scale);
+                ctx.fillStyle = '#4ade80'; ctx.beginPath(); ctx.ellipse(0,0,25,14,0,0,Math.PI*2); ctx.fill();
+                ctx.strokeStyle = '#14532d'; ctx.lineWidth = 1.5; ctx.stroke();
+                ctx.fillStyle = '#166534';
+                for(let i=-12; i<=12; i+=8) {
+                    ctx.fillRect(i-3, -8, 6, 16);
+                    ctx.fillStyle = '#86efac'; ctx.fillRect(i-3, -4, 6, 1); ctx.fillRect(i-3, 0, 6, 1); ctx.fillRect(i-3, 4, 6, 1);
+                    ctx.fillStyle = '#166534';
+                }
+                ctx.restore();
+            },
+            drawGolgi(x, y, angle, scale=1) {
+                ctx.save(); ctx.translate(x, y); ctx.rotate(angle); ctx.scale(scale, scale);
+                ctx.fillStyle = '#a855f7'; ctx.strokeStyle = '#581c87'; ctx.lineWidth = 2;
                 ctx.shadowColor = 'rgba(0,0,0,0.3)'; ctx.shadowBlur = 4; ctx.shadowOffsetY = 2;
                 for(let i=0; i<4; i++) {
-                    ctx.beginPath();
-                    ctx.ellipse(0, i*8 - 12, 25 - Math.abs(i-1.5)*5, 4, 0, 0, Math.PI*2);
-                    ctx.fill(); ctx.stroke();
+                    ctx.beginPath(); ctx.ellipse(0, i*8 - 12, 25 - Math.abs(i-1.5)*5, 4, 0, 0, Math.PI*2); ctx.fill(); ctx.stroke();
                 }
                 ctx.shadowColor = 'transparent';
                 ctx.beginPath(); ctx.arc(-30, -5, 4, 0, Math.PI*2); ctx.fill(); ctx.stroke();
                 ctx.beginPath(); ctx.arc(25, 15, 5, 0, Math.PI*2); ctx.fill(); ctx.stroke();
                 ctx.restore();
             },
-            drawER(ox, oy, isRough) {
+            drawGolgiGreen(x, y, angle, scale=1) {
+                ctx.save(); ctx.translate(x, y); ctx.rotate(angle); ctx.scale(scale, scale);
+                ctx.fillStyle = '#4ade80'; ctx.strokeStyle = '#14532d'; ctx.lineWidth = 2;
+                ctx.shadowColor = 'rgba(0,0,0,0.3)'; ctx.shadowBlur = 4; ctx.shadowOffsetY = 2;
+                for(let i=0; i<4; i++) {
+                    ctx.beginPath(); ctx.ellipse(0, i*8 - 12, 25 - Math.abs(i-1.5)*5, 4, 0, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+                }
+                ctx.shadowColor = 'transparent';
+                ctx.beginPath(); ctx.arc(-30, -5, 4, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+                ctx.beginPath(); ctx.arc(25, 15, 5, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+                ctx.restore();
+            },
+            drawER(ox, oy, isRough, scale=1) {
                 ctx.strokeStyle = isRough ? '#f59e0b' : '#34d399'; ctx.lineWidth = 4; ctx.lineCap = 'round';
-                ctx.save(); ctx.translate(ox, oy);
+                ctx.save(); ctx.translate(ox, oy); ctx.scale(scale, scale);
                 ctx.shadowColor = 'rgba(0,0,0,0.2)'; ctx.shadowBlur = 3;
                 for(let r = 75; r <= 105; r += 15) {
                     ctx.beginPath();
@@ -1355,8 +1765,7 @@
                     }
                     ctx.stroke();
                     if(isRough) {
-                        ctx.fillStyle = '#ef4444';
-                        ctx.shadowColor = 'transparent';
+                        ctx.fillStyle = '#ef4444'; ctx.shadowColor = 'transparent';
                         for(let a = 0.1; a < Math.PI; a += 0.3) {
                             let rr = r + Math.sin(a*10)*5;
                             ctx.beginPath(); ctx.arc(Math.cos(a)*rr, Math.sin(a)*rr, 2, 0, Math.PI*2); ctx.fill();
@@ -1366,109 +1775,271 @@
                 }
                 ctx.restore();
             },
-            draw() {
-                ctx.clearRect(0,0,canvas.width,canvas.height);
-                const ox = this.origin.x; const oy = this.origin.y;
-                let wobble = Math.sin(globalTime * 0.05) * 2;
-
-                const minDim = Math.min(canvas.width, canvas.height);
-                const scale = minDim < 600 ? minDim / 600 : 1;
-                
-                ctx.save();
-                ctx.translate(ox, oy); ctx.scale(scale, scale); ctx.translate(-ox, -oy);
+            drawAnimalCell(ox, oy, wobble, isCompare) {
+                ctx.save(); ctx.translate(ox, oy);
 
                 const cellR = 180;
-                const gradCell = ctx.createRadialGradient(ox - 50, oy - 50, 50, ox, oy, cellR);
-                gradCell.addColorStop(0, '#ffedd5'); gradCell.addColorStop(1, '#fdba74');
+                // Màu nền động vật (Xanh dương nhạt như SGK)
+                const gradCell = ctx.createRadialGradient(-50, -50, 50, 0, 0, cellR);
+                gradCell.addColorStop(0, '#cffafe'); gradCell.addColorStop(1, '#7dd3fc');
                 ctx.fillStyle = gradCell;
                 
                 ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 20;
                 ctx.beginPath();
-                for(let i=0; i<=Math.PI*2; i+=0.1) {
-                    let r = cellR + Math.sin(i*6 + globalTime*0.02)*4;
-                    if(i===0) ctx.moveTo(ox+r, oy); else ctx.lineTo(ox + r*Math.cos(i), oy + r*Math.sin(i));
+                // SỬA LỖI ĐỒ HỌA: Vòng lặp đóng kín màng tế bào chuẩn 100%, lượn sóng hô hấp mượt mà
+                for(let i=0; i<=Math.PI*2 + 0.1; i+=0.05) {
+                    let angle = i > Math.PI*2 ? 0 : i; // Đảm bảo điểm cuối khớp hoàn toàn điểm đầu
+                    let r = cellR + Math.sin(angle*6 + globalTime*0.02)*6 + Math.cos(angle*4 - globalTime*0.015)*5;
+                    let px = r * Math.cos(angle); let py = r * Math.sin(angle);
+                    if(i===0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
                 }
-                ctx.fill();
-                ctx.shadowColor = 'transparent';
+                ctx.closePath();
+                ctx.fill(); ctx.shadowColor = 'transparent';
                 
-                ctx.fillStyle = 'rgba(194, 65, 12, 0.1)';
+                // Môi trường hạt lơ lửng sinh động
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
                 for(let i=0; i<150; i++) {
-                    ctx.beginPath(); ctx.arc(ox + Math.sin(i*9)*140, oy + Math.cos(i*13)*140, Math.random()*3+1, 0, Math.PI*2); ctx.fill();
+                    let px = Math.sin(i*9 + globalTime*0.005)*140;
+                    let py = Math.cos(i*13 - globalTime*0.005)*140;
+                    ctx.beginPath(); ctx.arc(px, py, Math.random()*3+1, 0, Math.PI*2); ctx.fill();
                 }
 
-                ctx.lineWidth = 6; ctx.strokeStyle = '#ea580c'; ctx.stroke();
+                // Sợi khung xương tế bào (Cytoskeleton) bồng bềnh
+                ctx.strokeStyle = 'rgba(14, 165, 233, 0.3)'; ctx.lineWidth = 1.5;
+                for(let i=0; i<15; i++) {
+                    let drift = Math.sin(globalTime*0.01 + i)*10;
+                    ctx.beginPath(); 
+                    ctx.moveTo(Math.sin(i*4)*120 + drift, Math.cos(i*3)*120); 
+                    ctx.lineTo(Math.sin(i*7)*150 + drift, Math.cos(i*2)*150); 
+                    ctx.stroke();
+                }
 
-                const nucX = ox - 20; const nucY = oy - 30 + wobble;
-                const nucGrad = ctx.createRadialGradient(nucX-15, nucY-15, 10, nucX, nucY, 60);
-                nucGrad.addColorStop(0, '#d8b4fe'); nucGrad.addColorStop(1, '#7e22ce');
+                ctx.lineWidth = 6; ctx.strokeStyle = '#0284c7'; ctx.stroke(); // Viền ngoài xanh đậm
+
+                // Nhân tế bào dao động mượt
+                const nucX = -20 + Math.sin(globalTime*0.02)*2; 
+                const nucY = -10 + wobble;
+                const nucGrad = ctx.createRadialGradient(nucX-15, nucY-15, 10, nucX, nucY, 55);
+                nucGrad.addColorStop(0, '#a855f7'); nucGrad.addColorStop(1, '#581c87');
                 
                 ctx.shadowColor = 'rgba(0,0,0,0.3)'; ctx.shadowBlur = 10;
                 ctx.fillStyle = nucGrad;
-                ctx.beginPath(); ctx.arc(nucX, nucY, 60, 0, Math.PI*2); ctx.fill();
+                ctx.beginPath(); ctx.arc(nucX, nucY, 55, 0, Math.PI*2); ctx.fill();
                 ctx.shadowColor = 'transparent';
-                ctx.lineWidth = 4; ctx.strokeStyle = '#4c1d95'; ctx.setLineDash([12, 6]); ctx.stroke(); ctx.setLineDash([]);
+                ctx.lineWidth = 3; ctx.strokeStyle = '#312e81'; ctx.stroke();
                 
-                ctx.fillStyle = 'rgba(255,255,255,0.2)';
-                for(let i=0; i<30; i++) {
-                    ctx.beginPath(); ctx.arc(nucX + Math.sin(i*11)*45, nucY + Math.cos(i*7)*45, Math.random()*2, 0, Math.PI*2); ctx.fill();
+                // Lỗ màng nhân (nhấp nháy quay nhẹ)
+                ctx.fillStyle = '#312e81';
+                for(let i=0; i<15; i++) { 
+                    let a = i * (Math.PI*2/15) + globalTime*0.005;
+                    ctx.beginPath(); ctx.arc(nucX + Math.cos(a)*55, nucY + Math.sin(a)*55, 2.5, 0, Math.PI*2); ctx.fill(); 
                 }
 
-                ctx.fillStyle = '#4c1d95';
-                ctx.beginPath(); ctx.arc(nucX + 15, nucY + 10, 20, 0, Math.PI*2); ctx.fill();
+                ctx.fillStyle = '#312e81'; ctx.beginPath(); ctx.arc(nucX + 15, nucY + 10, 18, 0, Math.PI*2); ctx.fill(); // Nhân con
 
-                this.drawER(nucX, nucY, true); 
-                ctx.save(); ctx.translate(nucX+80, nucY+60); ctx.rotate(-0.8); this.drawER(0,0, false); ctx.restore();
+                // Lưới nội chất bám theo sự rung lắc của nhân
+                ctx.strokeStyle = '#f8fafc'; ctx.lineWidth = 7;
+                for(let r=65; r<=95; r+=15) {
+                    ctx.beginPath(); ctx.arc(nucX, nucY, r, -Math.PI*0.3, Math.PI*0.9); ctx.stroke();
+                    ctx.fillStyle = '#ef4444'; // Ribosome
+                    for(let a=-Math.PI*0.3; a<=Math.PI*0.9; a+=0.15) { ctx.beginPath(); ctx.arc(nucX + Math.cos(a)*r, nucY + Math.sin(a)*r, 1.5, 0, Math.PI*2); ctx.fill(); }
+                }
 
-                this.drawGolgi(ox + 90, oy - 20 - wobble*0.5, 0.5);
+                // Bộ máy Golgi lơ lửng dao động nhẹ
+                this.drawGolgiGreen(70, 70 + wobble*0.5, -0.5 + Math.sin(globalTime*0.02)*0.1, 0.8);
 
-                this.drawMito(ox - 60, oy + 80 + wobble, -0.2, 1.2);
-                this.drawMito(ox + 80, oy + 100 - wobble, 0.8, 1);
-                this.drawMito(ox + 10, oy - 120 + wobble*0.8, -1.0, 0.9);
+                // Ti thể nhịp nhàng hô hấp
+                this.drawMitoRed(-80, 50 + wobble*1.2, 0.5 + Math.cos(globalTime*0.01)*0.1, 1);
+                this.drawMitoRed(90, -40 - wobble, -0.8 + Math.sin(globalTime*0.015)*0.1, 1);
+                this.drawMitoRed(10, 110 + wobble*0.8, -0.2 + Math.cos(globalTime*0.02)*0.1, 0.9);
 
-                ctx.strokeStyle = '#c2410c'; ctx.lineWidth=2;
-                ctx.shadowColor = 'rgba(0,0,0,0.2)'; ctx.shadowBlur = 5;
-                const lysos = [[ox-100, oy-20], [ox+40, oy+120], [ox-40, oy+140]];
+                // Lysosome / Peroxisome trôi dạt 
+                ctx.fillStyle = '#60a5fa'; ctx.strokeStyle = '#1e3a8a'; ctx.lineWidth=2; ctx.shadowColor = 'rgba(0,0,0,0.2)'; ctx.shadowBlur = 5;
+                const lysos = [
+                    [-60 + Math.sin(globalTime*0.03)*5, -90 + Math.cos(globalTime*0.02)*5], 
+                    [100 + Math.cos(globalTime*0.025)*5, 20 + Math.sin(globalTime*0.035)*5], 
+                    [40 + Math.sin(globalTime*0.015)*5, 130 + Math.cos(globalTime*0.03)*5]
+                ];
                 lysos.forEach(p => { 
-                    const lGrad = ctx.createRadialGradient(p[0]-3, p[1]-3+wobble, 2, p[0], p[1]+wobble, 12);
-                    lGrad.addColorStop(0, '#fcd34d'); lGrad.addColorStop(1, '#ea580c');
-                    ctx.fillStyle = lGrad;
-                    ctx.beginPath(); ctx.arc(p[0], p[1] + wobble, 12, 0, Math.PI*2); ctx.fill(); ctx.stroke(); 
+                    ctx.beginPath(); ctx.arc(p[0], p[1], 10, 0, Math.PI*2); ctx.fill(); ctx.stroke(); 
                 });
                 ctx.shadowColor = 'transparent';
 
-                ctx.save(); ctx.translate(ox + 120, oy + 30); ctx.fillStyle = '#facc15';
-                ctx.fillRect(-10, -4, 20, 8); ctx.save(); ctx.rotate(Math.PI/2); ctx.fillRect(-10, -4, 20, 8); ctx.restore();
+                // Trung thể quay từ từ
+                ctx.save(); ctx.translate(40, -80); ctx.rotate(globalTime*0.01); ctx.fillStyle = '#3b82f6';
+                for(let i=0; i<4; i++) { ctx.rotate(Math.PI/4); ctx.fillRect(-10, -2, 20, 4); }
                 ctx.restore();
 
+                // Ribosome tự do trôi lơ lửng trong giới hạn màng
                 ctx.fillStyle = '#ef4444';
-                for(let i=0; i<25; i++) {
-                    ctx.beginPath(); ctx.arc(ox - 120 + (i*17)%200, oy - 80 + (i*23)%220, 2.5, 0, Math.PI*2); ctx.fill();
+                for(let i=0; i<30; i++) { 
+                    let rx = -120 + (i*17 + globalTime*0.5)%200;
+                    let ry = -80 + (i*23 + Math.sin(globalTime*0.05+i)*10)%220;
+                    if(Math.hypot(rx, ry) < cellR - 15) {
+                        ctx.beginPath(); ctx.arc(rx, ry, 2.5, 0, Math.PI*2); ctx.fill(); 
+                    }
                 }
 
-                if(this.state.showLabels) {
-                    ctx.fillStyle = 'white'; ctx.font = '13px Inter'; ctx.strokeStyle = 'rgba(255,255,255,0.7)'; ctx.lineWidth = 1.5;
-                    ctx.shadowColor = 'black'; ctx.shadowBlur = 4;
-                    const drawLabel = (lx, ly, text, tx, ty) => {
+                // Nhãn Labeling kết hợp hit-box cực chuẩn
+                if(this.state.showLabels && !isCompare) {
+                    ctx.fillStyle = 'white'; ctx.font = '13px Inter'; ctx.strokeStyle = 'rgba(0,0,0,0.5)'; ctx.lineWidth = 2; ctx.shadowColor = 'black'; ctx.shadowBlur = 4;
+                    this.state.labelHits = [];
+                    const drawLabel = (id, lx, ly, text, tx, ty) => {
                         ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(tx, ty); ctx.stroke();
                         let textW = ctx.measureText(text).width;
-                        ctx.fillText(text, tx + (tx>lx?5:-textW-5), ty + 4);
+                        let alignX = tx > lx ? tx + 5 : tx - textW - 5;
+                        ctx.fillText(text, alignX, ty + 4);
+                        // Sinh hitbox bao trọn tên nhãn để Click-to-Label
+                        this.state.labelHits.push({id: id, x: alignX + textW/2, y: ty, w: textW + 20, h: 20});
                     };
-                    
-                    drawLabel(ox+cellR-10, oy, "Màng tế bào", ox+cellR+30, oy+20);
-                    drawLabel(ox, oy+cellR-40, "Tế bào chất", ox, oy+cellR+20);
-                    drawLabel(nucX-60, nucY, "Màng nhân", nucX-100, nucY-30);
-                    drawLabel(nucX+15, nucY+10, "Nhân con", nucX-100, nucY+10);
-                    drawLabel(nucX-70, nucY+40, "Lưới nội chất hạt", nucX-140, nucY+60);
-                    drawLabel(ox+120, oy+80, "Lưới nội chất trơn", ox+160, oy+100);
-                    drawLabel(ox+90, oy-20, "Thể Golgi", ox+150, oy-40);
-                    drawLabel(ox-60, oy+80, "Ty thể", ox-140, oy+110);
-                    drawLabel(ox-100, oy-20, "Lysosome", ox-160, oy-10);
-                    drawLabel(ox+120, oy+30, "Trung thể", ox+180, oy+40);
+                    drawLabel('membrane', -cellR+10, 0, "Màng sinh chất", -cellR-40, -40); 
+                    drawLabel('cytoplasm', -100, 120, "Chất tế bào", -160, 140); 
+                    drawLabel('nucleus', nucX-20, nucY-20, "Nhân", -160, nucY-20); 
+                    drawLabel('rer', nucX+70, nucY+60, "Lưới nội chất", 130, 120); 
+                    drawLabel('golgi', 70, 70, "Bộ máy Gôngi", 140, 80); 
+                    drawLabel('mito', -80, 50, "Ti thể", -160, 50); 
+                    drawLabel('centrosome', 40, -80, "Trung thể", 120, -100);
+                    drawLabel('ribosome', -100, -80, "Ribôxôm", -140, -110); 
                     ctx.shadowBlur = 0;
+                }
+                ctx.restore();
+            },
+            drawPlantCell(ox, oy, wobble, isCompare) {
+                ctx.save(); ctx.translate(ox, oy);
+                
+                // Thành tế bào (Cell Wall) - Khung lục giác chuẩn SGK
+                ctx.fillStyle = '#4ade80'; ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 15;
+                ctx.strokeStyle = '#15803d'; ctx.lineWidth = 18; ctx.lineJoin = 'round';
+                ctx.beginPath();
+                for(let i=0; i<6; i++) {
+                    let a = i * Math.PI / 3;
+                    let px = Math.cos(a) * 190; let py = Math.sin(a) * 190;
+                    if(i===0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+                }
+                ctx.closePath(); ctx.fill(); ctx.stroke();
+                ctx.shadowColor = 'transparent';
+
+                // Cầu sinh chất (Plasmodesmata)
+                ctx.lineWidth = 18;
+                for(let i=0; i<6; i++) {
+                    let a = i * Math.PI / 3;
+                    let px1 = Math.cos(a) * 190; let py1 = Math.sin(a) * 190;
+                    let px2 = Math.cos(a) * 215; let py2 = Math.sin(a) * 215;
+                    ctx.beginPath(); ctx.moveTo(px1, py1); ctx.lineTo(px2, py2); ctx.stroke();
+                }
+                
+                // Màng sinh chất (Cell Membrane) & Cytoplasm
+                ctx.lineWidth = 4; ctx.strokeStyle = '#fef08a';
+                ctx.fillStyle = '#d9f99d'; // Tế bào chất xanh lá mạ
+                ctx.beginPath();
+                for(let i=0; i<6; i++) {
+                    let a = i * Math.PI / 3;
+                    let px = Math.cos(a) * 175; let py = Math.sin(a) * 175;
+                    if(i===0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+                }
+                ctx.closePath(); ctx.fill(); ctx.stroke();
+
+                // Sợi khung xương tế bào thực vật
+                ctx.strokeStyle = 'rgba(21, 128, 61, 0.2)'; ctx.lineWidth = 1.5;
+                for(let i=0; i<15; i++) {
+                    ctx.beginPath(); ctx.moveTo((Math.random()-0.5)*300, (Math.random()-0.5)*300); ctx.lineTo((Math.random()-0.5)*300, (Math.random()-0.5)*300); ctx.stroke();
+                }
+
+                // Không bào trung tâm (Vacuole) - Khối dịch khổng lồ bên phải
+                ctx.fillStyle = '#bae6fd'; ctx.strokeStyle = '#0ea5e9'; ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(20, -70);
+                ctx.bezierCurveTo(120, -90, 160, 0, 100, 100);
+                ctx.bezierCurveTo(70, 160, -20, 140, -10, 80);
+                ctx.bezierCurveTo(-5, 40, -30, -50, 20, -70);
+                ctx.fill(); ctx.stroke();
+                // Highlight không bào
+                ctx.strokeStyle = 'rgba(255,255,255,0.6)'; ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.moveTo(50, -40); ctx.quadraticCurveTo(80, 0, 60, 60); ctx.stroke();
+
+                // Nhân tế bào (Nucleus) - Lệch sang trái
+                const nucX = -60; const nucY = -50 + wobble;
+                const nucGrad = ctx.createRadialGradient(nucX-10, nucY-10, 5, nucX, nucY, 45);
+                nucGrad.addColorStop(0, '#818cf8'); nucGrad.addColorStop(1, '#3730a3');
+                ctx.fillStyle = nucGrad;
+                ctx.beginPath(); ctx.arc(nucX, nucY, 45, 0, Math.PI*2); ctx.fill();
+                ctx.lineWidth = 3; ctx.strokeStyle = '#1e3a8a'; ctx.setLineDash([8, 4]); ctx.stroke(); ctx.setLineDash([]);
+                ctx.fillStyle = '#1e3a8a'; ctx.beginPath(); ctx.arc(nucX + 10, nucY + 5, 12, 0, Math.PI*2); ctx.fill(); // Nhân con
+
+                // Lưới nội chất hạt bao quanh nhân
+                ctx.strokeStyle = '#fb923c'; ctx.lineWidth = 6;
+                for(let r=55; r<=85; r+=15) {
+                    ctx.beginPath(); ctx.arc(nucX, nucY, r, -Math.PI*0.8, Math.PI*1.2); ctx.stroke();
+                    ctx.fillStyle = '#dc2626'; // Ribosome đỏ
+                    for(let a=-Math.PI*0.8; a<=Math.PI*1.2; a+=0.2) { ctx.beginPath(); ctx.arc(nucX + Math.cos(a)*r, nucY + Math.sin(a)*r, 2.5, 0, Math.PI*2); ctx.fill(); }
+                }
+
+                // Lục lạp (Chloroplasts)
+                this.drawChloroplast(-100, -20 + wobble, 0.5, 1.1);
+                this.drawChloroplast(-80, 80 - wobble, -0.3, 1.1);
+                this.drawChloroplast(20, -110 + wobble, 1.2, 1.1);
+                
+                // Ti thể (Xanh lam theo SGK)
+                this.drawMito(-30, 100 + wobble, 0.8, 0.9);
+                this.drawMito(80, -100 - wobble, -0.5, 0.9);
+
+                // Golgi
+                this.drawGolgi(-40, 90 + wobble*0.5, -0.3, 0.8);
+
+                // Chú thích & Click-to-label
+                if (this.state.showLabels && !isCompare) {
+                    ctx.fillStyle = 'white'; ctx.font = '13px Inter'; ctx.strokeStyle = 'rgba(0,0,0,0.5)'; ctx.lineWidth = 2;
+                    ctx.shadowColor = 'black'; ctx.shadowBlur = 4;
+                    this.state.labelHits = [];
+                    const drawLabel = (id, lx, ly, text, tx, ty) => {
+                        ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(tx, ty); ctx.stroke();
+                        let textW = ctx.measureText(text).width;
+                        let alignX = tx > lx ? tx + 5 : tx - textW - 5;
+                        ctx.fillText(text, alignX, ty + 4);
+                        this.state.labelHits.push({id: id, x: alignX + textW/2, y: ty, w: textW + 20, h: 20});
+                    };
+                    drawLabel('cellwall', -180, 0, "Thành tế bào", -220, 0); 
+                    drawLabel('membrane', -165, -50, "Màng sinh chất", -220, -50);
+                    drawLabel('vacuole', 60, 40, "Không bào trung tâm", 180, 40); 
+                    drawLabel('chloroplast', -100, -20, "Lục lạp", -160, -20);
+                    drawLabel('nucleus', nucX, nucY, "Nhân", -160, -100); 
+                    drawLabel('nucleolus', nucX+10, nucY+5, "Nhân con", -120, -140);
+                    drawLabel('mito', -30, 100, "Ti thể", -140, 140); 
+                    drawLabel('golgi', -40, 90, "Bộ máy Golgi", -140, 100);
+                    ctx.shadowBlur = 0;
+                }
+                ctx.restore();
+            },
+            draw() {
+                ctx.clearRect(0,0,canvas.width,canvas.height);
+                let wobble = Math.sin(globalTime * 0.05) * 2;
+                let type = this.state.cellType || 'animal';
+                let isCompare = type === 'compare';
+
+                const minDim = Math.min(canvas.width, canvas.height);
+                const scale = minDim < 600 ? minDim / 600 : 1;
+                const subScale = isCompare ? 0.55 : 1;
+                
+                ctx.save();
+                ctx.translate(this.origin.x, this.origin.y); 
+                ctx.scale(scale * subScale, scale * subScale); 
+
+                if (type === 'animal') {
+                    this.drawAnimalCell(0, 0, wobble, false);
+                } else if (type === 'plant') {
+                    this.drawPlantCell(0, 0, wobble, false);
+                } else if (type === 'compare') {
+                    this.drawPlantCell(-180, 0, wobble, true);
+                    this.drawAnimalCell(180, 0, wobble, true);
+                    
+                    ctx.fillStyle = '#cbd5e1'; ctx.font = 'bold 22px Inter'; ctx.textAlign = 'center';
+                    ctx.fillText("Tế Bào Thực Vật", -180, -250);
+                    ctx.fillText("Tế Bào Động Vật", 180, -250);
                 }
                 
                 ctx.restore(); 
 
+                // HIỂN THỊ MODAL BẢNG CHI TIẾT
                 if(this.state.selectedOrganelle) {
                     ctx.fillStyle = 'rgba(28, 25, 23, 0.8)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
                     const modalW = Math.min(450, canvas.width - 40); const modalH = 270;
@@ -1480,14 +2051,18 @@
                     const details = {
                         nucleus: { n: "Nhân Tế Bào (Nucleus)", d: "Trung tâm điều khiển của tế bào. Chứa phần lớn vật chất di truyền (DNA) dưới dạng nhiễm sắc thể. Được bao bọc bởi màng nhân kép có lỗ màng nhân." },
                         nucleolus: { n: "Nhân Con (Nucleolus)", d: "Cấu trúc dạng hạt hình cầu nằm trong nhân tế bào. Đây là nơi diễn ra quá trình tổng hợp rARN để lắp ráp thành các tiểu đơn vị Ribosome." },
-                        mito: { n: "Ty Thể (Mitochondria)", d: "Được ví như 'nhà máy năng lượng' của tế bào. Nơi diễn ra quá trình hô hấp tế bào, phân giải chất hữu cơ để tạo ra năng lượng ATP." },
-                        golgi: { n: "Thể Golgi (Golgi Apparatus)", d: "Hệ thống các túi màng dẹp xếp chồng lên nhau. Chức năng chính là thu thập, sửa đổi, đóng gói và phân phối các sản phẩm (protein, lipid)." },
+                        mito: { n: "Ti Thể (Mitochondria)", d: "Được ví như 'nhà máy năng lượng' của tế bào. Nơi diễn ra quá trình hô hấp tế bào, phân giải chất hữu cơ để tạo ra năng lượng ATP." },
+                        golgi: { n: "Bộ máy Golgi (Golgi Apparatus)", d: "Hệ thống các túi màng dẹp xếp chồng lên nhau. Chức năng chính là thu thập, sửa đổi, đóng gói và phân phối các sản phẩm (protein, lipid)." },
                         rer: { n: "Lưới Nội Chất Hạt (Rough ER)", d: "Hệ thống màng ống có đính vô số hạt Ribosome trên bề mặt. Đóng vai trò cực kỳ quan trọng trong việc tổng hợp và vận chuyển protein." },
                         ser: { n: "Lưới Nội Chất Trơn (Smooth ER)", d: "Hệ thống màng ống trơn nhẵn (không đính Ribosome). Tham gia vào quá trình tổng hợp lipid, chuyển hóa carbohydrate và giải độc tế bào." },
                         lysosome: { n: "Lysosome", d: "Bào quan dạng túi chứa nhiều enzyme thủy phân. Đóng vai trò là 'dạ dày' của tế bào, chuyên tiêu hóa nội bào và phân hủy bào quan già cỗi." },
-                        centrosome: { n: "Trung Thể (Centrosome)", d: "Bào quan gồm 2 trung tử hình trụ xếp vuông góc với nhau. Đóng vai trò nòng cốt trong quá trình phân chia tế bào (tạo thoi vô sắc)." },
+                        centrosome: { n: "Trung Thể (Centrosome)", d: "Bào quan gồm 2 trung tử hình trụ xếp vuông góc với nhau. Đóng vai trò nòng cốt trong phân bào." },
                         cytoplasm: { n: "Tế Bào Chất (Cytoplasm)", d: "Khối chất keo bán lỏng lấp đầy không gian bên trong màng tế bào. Chứa các bào quan và là môi trường diễn ra các phản ứng sinh hóa." },
-                        membrane: { n: "Màng Tế Bào (Cell Membrane)", d: "Lớp màng phospholipid kép bao bọc bên ngoài. Kiểm soát chặt chẽ sự trao đổi chất giữa tế bào và môi trường xung quanh (tính thấm chọn lọc)." }
+                        membrane: { n: "Màng Sinh Chất (Cell Membrane)", d: "Lớp màng phospholipid kép bao bọc bên ngoài. Kiểm soát chặt chẽ sự trao đổi chất giữa tế bào và môi trường xung quanh." },
+                        chloroplast: { n: "Lục Lạp (Chloroplast)", d: "Bào quan đặc trưng của tế bào thực vật, chứa diệp lục (chlorophyll). Thực hiện quang hợp chuyển hóa quang năng thành năng lượng hóa học." },
+                        vacuole: { n: "Không Bào Trung Tâm", d: "Túi lớn chứa dịch tế bào, chiếm phần lớn thể tích tế bào thực vật. Duy trì áp suất thẩm thấu, lưu trữ nước, dưỡng chất và chất thải." },
+                        cellwall: { n: "Thành Tế Bào (Cell Wall)", d: "Lớp vách cứng rắn cấu tạo từ xenlulozơ bao bọc bên ngoài màng tế bào. Giúp duy trì hình dáng cố định và bảo vệ tế bào thực vật." },
+                        ribosome: { n: "Ribôxôm (Ribosome)", d: "Bào quan không có màng bao bọc, cấu tạo từ rARN và protein. Điểm đính trên lưới nội chất hạt hoặc trôi nổi. Chức năng tổng hợp protein." }
                     };
                     const info = details[this.state.selectedOrganelle];
                     
@@ -1496,13 +2071,22 @@
                     if(so === 'mito') this.drawMito(0, 0, 0, 2.5);
                     else if(so === 'golgi') { ctx.scale(1.5, 1.5); this.drawGolgi(0, 0, 0); }
                     else if(so === 'lysosome') { const lGrad = ctx.createRadialGradient(-5,-5,4,0,0,25); lGrad.addColorStop(0,'#fcd34d'); lGrad.addColorStop(1,'#ea580c'); ctx.fillStyle = lGrad; ctx.strokeStyle = '#c2410c'; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(0, 0, 25, 0, Math.PI*2); ctx.fill(); ctx.stroke(); }
-                    else if(so === 'centrosome') { ctx.fillStyle = '#facc15'; ctx.scale(2, 2); ctx.fillRect(-10, -4, 20, 8); ctx.rotate(Math.PI/2); ctx.fillRect(-10, -4, 20, 8); }
-                    else if(so === 'nucleus') { const nGrad=ctx.createRadialGradient(-10,-10,10,0,0,45); nGrad.addColorStop(0,'#d8b4fe'); nGrad.addColorStop(1,'#7e22ce'); ctx.fillStyle = nGrad; ctx.beginPath(); ctx.arc(0, 0, 45, 0, Math.PI*2); ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = '#4c1d95'; ctx.setLineDash([8, 4]); ctx.stroke(); }
-                    else if(so === 'nucleolus') { ctx.fillStyle = '#4c1d95'; ctx.beginPath(); ctx.arc(0, 0, 30, 0, Math.PI*2); ctx.fill(); }
+                    else if(so === 'centrosome') { ctx.fillStyle = '#16a34a'; ctx.scale(2, 2); ctx.fillRect(-10, -4, 20, 8); ctx.rotate(Math.PI/2); ctx.fillRect(-10, -4, 20, 8); }
+                    else if(so === 'nucleus') { const nGrad=ctx.createRadialGradient(-10,-10,10,0,0,45); nGrad.addColorStop(0,'#818cf8'); nGrad.addColorStop(1,'#3730a3'); ctx.fillStyle = nGrad; ctx.beginPath(); ctx.arc(0, 0, 45, 0, Math.PI*2); ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = '#1e3a8a'; ctx.setLineDash([8, 4]); ctx.stroke(); }
+                    else if(so === 'nucleolus') { ctx.fillStyle = '#1e3a8a'; ctx.beginPath(); ctx.arc(0, 0, 30, 0, Math.PI*2); ctx.fill(); }
                     else if(so === 'rer') { ctx.scale(0.8, 0.8); this.drawER(0, 0, true); }
                     else if(so === 'ser') { ctx.scale(0.8, 0.8); this.drawER(0, 0, false); }
-                    else if(so === 'membrane') { ctx.strokeStyle = '#fdba74'; ctx.lineWidth = 10; ctx.beginPath(); ctx.arc(0, 40, 60, Math.PI+0.3, Math.PI*2-0.3); ctx.stroke(); }
-                    else if(so === 'cytoplasm') { const g = ctx.createRadialGradient(-10, -10, 10, 0, 0, 40); g.addColorStop(0, '#ffedd5'); g.addColorStop(1, '#fdba74'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, 40, 0, Math.PI*2); ctx.fill(); }
+                    else if(so === 'membrane') { ctx.strokeStyle = '#fef08a'; ctx.lineWidth = 10; ctx.beginPath(); ctx.arc(0, 40, 60, Math.PI+0.3, Math.PI*2-0.3); ctx.stroke(); }
+                    else if(so === 'cytoplasm') { const g = ctx.createRadialGradient(-10, -10, 10, 0, 0, 40); g.addColorStop(0, '#fef08a'); g.addColorStop(1, '#bef264'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0, 0, 40, 0, Math.PI*2); ctx.fill(); }
+                    else if(so === 'chloroplast') { this.drawChloroplast(0, 0, 0, 2.5); }
+                    else if(so === 'vacuole') { ctx.fillStyle = '#bae6fd'; ctx.strokeStyle = '#0ea5e9'; ctx.lineWidth=3; ctx.beginPath(); ctx.ellipse(0, 0, 60, 80, 0, 0, Math.PI*2); ctx.fill(); ctx.stroke(); }
+                    else if(so === 'cellwall') { 
+                        ctx.fillStyle = '#4ade80'; ctx.lineWidth = 12; ctx.strokeStyle = '#15803d'; ctx.lineJoin = 'round';
+                        ctx.beginPath();
+                        for(let i=0; i<6; i++) { let a = i * Math.PI / 3; let px = Math.cos(a)*50; let py = Math.sin(a)*50; if(i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py); }
+                        ctx.closePath(); ctx.fill(); ctx.stroke();
+                    }
+                    else if(so === 'ribosome') { ctx.fillStyle = '#ef4444'; ctx.beginPath(); ctx.arc(0, 0, 15, 0, Math.PI*2); ctx.fill(); }
                     ctx.restore();
                     
                     ctx.fillStyle = '#4ade80'; ctx.font = 'bold 20px Inter'; ctx.textAlign = 'center';
@@ -1536,19 +2120,13 @@
             const btnClass = currentDomain === 'physics' ? 'bg-sky-600 hover:bg-sky-500' : (currentDomain === 'chemistry' ? 'bg-pink-600 hover:bg-pink-500' : 'bg-emerald-600 hover:bg-emerald-500');
 
             if (currentDomain === 'physics') {
-                html += `
-                    <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-4 shadow-lg mb-4">
-                        <h3 class="text-white font-semibold text-sm mb-2 flex items-center gap-2"><i class="fa-solid fa-clock ${themeClass}"></i> Hệ thống</h3>
-                        ${createSlider('phys-time', 'Tốc độ thời gian (Làm chậm)', 0.1, 2.0, 0.1, timeScale, 'x', 'updateTimeScale', '#f59e0b')}
-                    </div>
-                `;
-
                 if (simName === 'projectile') {
                     html += `
                         <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-4 shadow-lg">
                             <h3 class="text-white font-semibold text-sm mb-3 flex items-center gap-2"><i class="fa-solid fa-sliders ${themeClass}"></i> Tham số bắn</h3>
                             ${createSlider('proj-angle', 'Góc bắn', 0, 90, 1, simulations.projectile.state.angle, '°', 'updateProjAngle')}
                             ${createSlider('proj-vel', 'Vận tốc', 1, 50, 1, simulations.projectile.state.velocity, ' m/s', 'updateProjVel')}
+                            ${createSlider('proj-h0', 'Độ cao điểm bắn', 0, 40, 1, simulations.projectile.state.h0 || 0, ' m', 'updateProjH0')}
                         </div>
                         <button onclick="simulations.projectile.fire()" class="w-full py-3 ${btnClass} text-white rounded-xl font-bold transition-all active:scale-95 text-sm mt-4">
                             <i class="fa-solid fa-fire mr-2"></i> BẮN!
@@ -1678,7 +2256,8 @@
                 } else if (simName === 'cell') {
                     html += `
                         <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-4 shadow-lg">
-                            <h3 class="text-white font-semibold text-sm mb-3 flex items-center gap-2"><i class="fa-solid fa-microscope ${themeClass}"></i> Cấu trúc tế bào</h3>
+                            <h3 class="text-white font-semibold text-sm mb-3 flex items-center gap-2"><i class="fa-solid fa-microscope ${themeClass}"></i> Phân loại & Cấu trúc</h3>
+                            ${createSelect('cell-type', 'Cấu trúc Tế bào', [{value:'animal', label:'Động vật'},{value:'plant', label:'Thực vật'},{value:'compare', label:'So sánh'}], 'updateCellType')}
                             ${createSlider('cell-act', 'Mức độ hoạt động', 0.1, 5.0, 0.1, simulations.cell.state.activity, 'x', 'updateCellAct', colors.bio)}
                             <div class="flex items-center justify-between mt-4 border-t border-slate-700 pt-4">
                                 <span class="text-sm text-slate-300 font-medium">Hiển thị chú thích</span>
@@ -1696,6 +2275,7 @@
 
         window.updateProjAngle = (v) => { simulations.projectile.state.angle = v; if(!simulations.projectile.state.isFiring) simulations.projectile.draw(); };
         window.updateProjVel = (v) => simulations.projectile.state.velocity = v;
+        window.updateProjH0 = (v) => { simulations.projectile.state.h0 = v; simulations.projectile.state.maxH = v; if(!simulations.projectile.state.isFiring) { simulations.projectile.state.y = v; simulations.projectile.draw(); } };
         
         window.updatePendLength = (v) => { simulations.pendulum.state.length = v; simulations.pendulum.updateBobPos(); simulations.pendulum.draw(); };
         window.updatePendDamp = (v) => simulations.pendulum.state.damping = 1 - (v/10); 
@@ -1717,6 +2297,7 @@
         window.updateTimeScale = (v) => timeScale = v;
 
         window.updateCellAct = (v) => simulations.cell.state.activity = v;
+        window.updateCellType = (v) => { simulations.cell.state.cellType = v; simulations.cell.state.selectedOrganelle = null; };
 
     </script>
 </body>
