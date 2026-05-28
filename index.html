@@ -110,7 +110,7 @@
                 </div>
                 <div class="p-5 flex-1 flex flex-col">
                     <h2 class="text-xl font-serif font-bold text-stone-100 mb-1.5">Vật Lý Học</h2>
-                    <p class="text-stone-400 text-xs leading-relaxed mb-5 flex-1">Tìm hiểu định luật vạn vật hấp dẫn, chuyển động ném xiên, bảo toàn cơ năng của con lắc và hiện tượng khúc xạ ánh sáng.</p>
+                    <p class="text-stone-400 text-xs leading-relaxed mb-5 flex-1">Tìm hiểu định luật vạn vật hấp dẫn, chuyển động ném xiên, bảo toàn cơ năng của con lắc, hiện tượng khúc xạ ánh sáng và năng lượng hao phí.</p>
                     <button onclick="enterDomain('physics')" class="w-full py-2.5 rounded-lg bg-sky-600 hover:bg-sky-500 text-white font-semibold text-sm transition-colors flex justify-center items-center gap-2">
                         Bắt đầu học <i class="fa-solid fa-arrow-right"></i>
                     </button>
@@ -284,7 +284,8 @@
             physics: [
                 { id: 'projectile', icon: 'fa-rocket', name: 'Ném Xiên' }, { id: 'pendulum', icon: 'fa-stopwatch', name: 'Con Lắc' },
                 { id: 'spring', icon: 'fa-water', name: 'Lò Xo Dọc' }, { id: 'hspring', icon: 'fa-arrows-left-right-to-line', name: 'Lò Xo Ngang' },
-                { id: 'gravity', icon: 'fa-earth-moon', name: 'Hấp Dẫn' }, { id: 'optics', icon: 'fa-lightbulb', name: 'Khúc Xạ' }
+                { id: 'gravity', icon: 'fa-earth-moon', name: 'Hấp Dẫn' }, { id: 'optics', icon: 'fa-lightbulb', name: 'Khúc Xạ' },
+                { id: 'waste', icon: 'fa-plug', name: 'Hao Phí' }
             ],
             chemistry: [
                 { id: 'states', icon: 'fa-cubes', name: 'Trạng Thái Vật Chất' },
@@ -329,7 +330,7 @@
             const bgClass = currentDomain === 'physics' ? 'bg-accent-600' : (currentDomain === 'chemistry' ? 'bg-chem-600' : 'bg-bio-600');
             activeTab.className = `sim-tab shrink-0 w-[105px] py-2 px-2 rounded-xl ${bgClass} text-white font-semibold text-[11px] leading-tight transition flex flex-col items-center justify-center text-center gap-1.5 snap-start whitespace-normal shadow-md shadow-black/20`;
 
-            document.getElementById('chart-container').classList.toggle('hidden', (simName !== 'pendulum' && simName !== 'spring' && simName !== 'hspring'));
+            document.getElementById('chart-container').classList.toggle('hidden', (simName !== 'pendulum' && simName !== 'spring' && simName !== 'hspring' && simName !== 'waste'));
             resizeCanvas(); cancelAnimationFrame(animationId); buildControls(simName);
             if(simulations[simName]) simulations[simName].init();
         }
@@ -857,6 +858,279 @@
             },
             loop() { if(currentSim !== 'optics') return; this.draw(); animationId = requestAnimationFrame(() => this.loop()); }
         }
+
+        simulations.waste = {
+            state: { temp: 25, isBoiling: false, power: 1500, insulation: 50, E_in: 0, E_useful: 0, E_waste: 0, heatWaves: [], accum: 0 },
+            origin: { x: 0, y: 0 },
+            initPositions() { this.origin.x = canvas.width / 2 - 50; this.origin.y = canvas.height / 2; },
+            init() {
+                this.initPositions();
+                initEnergyChart('Điện Năng Input', 'Nhiệt Hữu Ích', 'Nhiệt Hao Phí', '#3b82f6', '#10b981', '#ef4444');
+                this.reset();
+                this.loop();
+            },
+            reset() {
+                this.state.temp = 25; this.state.isBoiling = false; this.state.E_in = 0; this.state.E_useful = 0; this.state.E_waste = 0;
+                this.state.heatWaves = []; this.state.accum = 0;
+                if(energyChartInstance) energyChartInstance.data.datasets.forEach(ds => ds.data = []);
+                const btn = document.getElementById('btn-kettle-power');
+                if(btn) { btn.innerHTML = '<i class="fa-solid fa-power-off mr-2"></i> BẬT ẤM'; btn.className = btn.className.replace('bg-green-600', 'bg-red-600').replace('hover:bg-green-500', 'hover:bg-red-500').replace('rgba(22,163,74,0.5)', 'rgba(220,38,38,0.5)'); }
+            },
+            togglePower() {
+                if(this.state.temp >= 100) { this.reset(); return; } // reset if already boiled
+                this.state.isBoiling = !this.state.isBoiling;
+                const btn = document.getElementById('btn-kettle-power');
+                if(btn) {
+                    if(this.state.isBoiling) {
+                        btn.innerHTML = '<i class="fa-solid fa-power-off mr-2"></i> TẮT ẤM';
+                        btn.className = btn.className.replace('bg-red-600', 'bg-green-600').replace('hover:bg-red-500', 'hover:bg-green-500').replace('rgba(220,38,38,0.5)', 'rgba(22,163,74,0.5)');
+                    } else {
+                        btn.innerHTML = '<i class="fa-solid fa-power-off mr-2"></i> BẬT ẤM';
+                        btn.className = btn.className.replace('bg-green-600', 'bg-red-600').replace('hover:bg-green-500', 'hover:bg-red-500').replace('rgba(22,163,74,0.5)', 'rgba(220,38,38,0.5)');
+                    }
+                }
+            },
+            update() {
+                if(isPaused) return;
+                this.state.accum += timeScale;
+                while(this.state.accum >= 1) {
+                    this.state.accum -= 1;
+                    globalTime++;
+
+                    // Physics step
+                    const dt = 0.05; // Giả lập bước thời gian
+                    const envTemp = 25;
+                    const heatCapacity = 100; // Nhiệt dung giả lập
+
+                    // Tính toán hao phí: Tỉ lệ thuận với chênh lệch nhiệt độ và tỉ lệ nghịch với độ cách nhiệt
+                    // Loss rate = k * (T - T_env) * (1 - insulation/100)
+                    let lossFactor = (1 - this.state.insulation / 100) * 2.0 + 0.1; // Base loss + insulation effect
+                    let heatLossRate = lossFactor * (this.state.temp - envTemp);
+
+                    if (this.state.isBoiling) {
+                        this.state.E_in += this.state.power * dt;
+                        let netPower = this.state.power - heatLossRate*10; // *10 scaling factor
+                        
+                        if(netPower > 0) {
+                            this.state.temp += netPower / heatCapacity * dt;
+                            this.state.E_useful += netPower * dt;
+                        }
+                        this.state.E_waste += heatLossRate * 10 * dt;
+
+                        if (this.state.temp >= 100) {
+                            this.state.temp = 100;
+                            this.togglePower(); // Tự ngắt khi sôi
+                        }
+                    } else {
+                        // Nguội dần
+                        if (this.state.temp > envTemp) {
+                            this.state.temp -= (heatLossRate / heatCapacity) * dt * 0.5;
+                            if(this.state.temp < envTemp) this.state.temp = envTemp;
+                            // Nguội đi cũng là tỏa nhiệt hao phí (nhưng ko tốn điện thêm)
+                            this.state.E_waste += heatLossRate * 10 * dt * 0.5;
+                        }
+                    }
+
+                    // Cập nhật biểu đồ (mỗi 10 frames)
+                    if (globalTime % 10 === 0 && energyChartInstance && this.state.E_in > 0) {
+                        const data = energyChartInstance.data;
+                        if(data.labels.length > 30) { data.labels.shift(); data.datasets.forEach(ds => ds.data.shift()); }
+                        data.labels.push('');
+                        data.datasets[0].data.push(this.state.E_in / 1000); // kJ
+                        data.datasets[1].data.push(this.state.E_useful / 1000);
+                        data.datasets[2].data.push(this.state.E_waste / 1000);
+                        energyChartInstance.update('none');
+                    }
+
+                    // Sinh hạt nhiệt tỏa ra
+                    if ((this.state.temp > 30 && !this.state.isBoiling) || this.state.isBoiling) {
+                        let spawnRate = (this.state.temp - 25) / 100 * (1 - this.state.insulation/100) * 3; // Càng nóng, càng cách nhiệt kém -> càng nhiều hạt
+                        if (Math.random() < spawnRate) {
+                            this.state.heatWaves.push({
+                                x: this.origin.x + (Math.random() - 0.5) * 120, // Xung quanh vỏ ấm
+                                y: this.origin.y + (Math.random() - 0.5) * 100,
+                                phase: Math.random() * Math.PI * 2,
+                                speed: Math.random() * 2 + 1,
+                                life: 1.0,
+                                maxLife: Math.random() * 50 + 30,
+                                size: Math.random() * 15 + 10
+                            });
+                        }
+                    }
+
+                    // Cập nhật hạt nhiệt
+                    for(let i = this.state.heatWaves.length - 1; i >= 0; i--) {
+                        let w = this.state.heatWaves[i];
+                        w.y -= w.speed;
+                        w.x += Math.sin(w.phase + globalTime*0.05) * 1.5;
+                        w.life -= 1 / w.maxLife;
+                        if(w.life <= 0) this.state.heatWaves.splice(i, 1);
+                    }
+                }
+
+                hudInfo.innerHTML = `
+                    <div class="text-sky-400 font-bold mb-1"><i class="fa-solid fa-plug"></i> Hao Phí Năng Lượng</div>
+                    <div>Nhiệt độ nước: <span class="${this.state.temp > 80 ? 'text-rose-400' : 'text-white'} font-bold">${this.state.temp.toFixed(1)} °C</span></div>
+                    <div>Trạng thái: <span class="text-white">${this.state.isBoiling ? 'Đang đun...' : 'Đã ngắt'}</span></div>
+                    <div class="mt-2 text-xs">Điện năng nạp vào: <span class="text-blue-400">${(this.state.E_in/1000).toFixed(1)} kJ</span></div>
+                    <div class="text-xs">Nhiệt năng hữu ích: <span class="text-emerald-400">${(this.state.E_useful/1000).toFixed(1)} kJ</span></div>
+                    <div class="text-xs">Nhiệt năng hao phí (Tỏa ra mt): <span class="text-rose-400 font-bold">${(this.state.E_waste/1000).toFixed(1)} kJ</span></div>
+                    <div class="text-xs mt-1 text-slate-400">Hiệu suất: ${this.state.E_in > 0 ? ((this.state.E_useful / this.state.E_in) * 100).toFixed(1) : 0}%</div>
+                `;
+            },
+            draw() {
+                ctx.clearRect(0,0,canvas.width,canvas.height);
+                const ox = this.origin.x; const oy = this.origin.y;
+
+                // --- 1. MÔI TRƯỜNG XUNG QUANH ---
+                // Tường
+                ctx.fillStyle = '#0f172a'; ctx.fillRect(0, 0, canvas.width, oy + 120);
+                // Bàn gỗ
+                const tableGrad = ctx.createLinearGradient(0, oy + 120, 0, canvas.height);
+                tableGrad.addColorStop(0, '#78350f'); // Nâu tối
+                tableGrad.addColorStop(1, '#451a03'); // Nâu đậm hơn
+                ctx.fillStyle = tableGrad;
+                ctx.fillRect(0, oy + 120, canvas.width, canvas.height - (oy + 120));
+                
+                // Bóng đổ dưới bàn
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+                ctx.beginPath(); ctx.ellipse(ox, oy + 130, 95, 20, 0, 0, Math.PI * 2); ctx.fill();
+
+                // --- 2. Ổ CẮM VÀ DÂY ĐIỆN ---
+                const sx = ox + 180; const sy = oy + 40;
+                
+                // Ổ cắm tường (Chi tiết hơn)
+                ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 10;
+                ctx.fillStyle = '#f8fafc'; ctx.beginPath(); ctx.roundRect(sx, sy - 50, 60, 80, 8); ctx.fill();
+                ctx.shadowBlur = 0;
+                ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 2; ctx.stroke();
+                
+                // Mặt ổ cắm chìm
+                ctx.fillStyle = '#e2e8f0'; ctx.beginPath(); ctx.roundRect(sx + 10, sy - 40, 40, 60, 5); ctx.fill();
+                // Hai lỗ cắm
+                ctx.fillStyle = '#0f172a'; ctx.fillRect(sx + 20, sy - 20, 6, 20); ctx.fillRect(sx + 36, sy - 20, 6, 20);
+
+                // Dây điện mềm mại hơn (đường cong Bezier)
+                ctx.strokeStyle = '#1e293b'; ctx.lineWidth = 10; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+                ctx.beginPath();
+                ctx.moveTo(ox + 65, oy + 100); // Từ đế ấm
+                ctx.bezierCurveTo(ox + 120, oy + 140, sx - 60, oy + 150, sx + 5, sy - 10); // Đến phích cắm
+                ctx.stroke();
+                // Phích cắm
+                ctx.fillStyle = '#334155'; ctx.beginPath(); ctx.roundRect(sx - 15, sy - 25, 25, 30, 4); ctx.fill();
+
+                // --- 3. ẤM SIÊU TỐC (NÂNG CẤP ĐỒ HỌA 3D) ---
+                
+                // Đế ấm (Màu xám kim loại)
+                const baseGrad = ctx.createLinearGradient(ox - 70, 0, ox + 70, 0);
+                baseGrad.addColorStop(0, '#94a3b8'); baseGrad.addColorStop(0.5, '#f1f5f9'); baseGrad.addColorStop(1, '#64748b');
+                ctx.fillStyle = baseGrad;
+                ctx.beginPath(); ctx.roundRect(ox - 70, oy + 90, 140, 35, 12); ctx.fill();
+                
+                // Viền ngăn cách đế và thân
+                ctx.strokeStyle = '#475569'; ctx.lineWidth = 3;
+                ctx.beginPath(); ctx.moveTo(ox - 70, oy + 90); ctx.lineTo(ox + 70, oy + 90); ctx.stroke();
+
+                // Thân ấm màu xanh lá bóng bẩy
+                const bodyGrad = ctx.createLinearGradient(ox - 65, 0, ox + 65, 0);
+                bodyGrad.addColorStop(0, '#4d7c0f'); // Tối
+                bodyGrad.addColorStop(0.3, '#a3e635'); // Sáng bóng (Highlight)
+                bodyGrad.addColorStop(0.8, '#65a30d'); // Màu trung bình
+                bodyGrad.addColorStop(1, '#3f6212'); // Tối
+                ctx.fillStyle = bodyGrad;
+                
+                ctx.beginPath();
+                ctx.moveTo(ox - 70, oy + 90);
+                ctx.lineTo(ox + 70, oy + 90);
+                // Tạo độ vát nhẹ cho thân ấm
+                ctx.quadraticCurveTo(ox + 65, oy - 20, ox + 60, oy - 80);
+                ctx.lineTo(ox - 60, oy - 80);
+                ctx.quadraticCurveTo(ox - 65, oy - 20, ox - 70, oy + 90);
+                ctx.closePath(); ctx.fill();
+
+                // Nắp ấm (Kim loại + Nhựa)
+                const lidGrad = ctx.createLinearGradient(ox - 60, 0, ox + 60, 0);
+                lidGrad.addColorStop(0, '#cbd5e1'); lidGrad.addColorStop(0.5, '#ffffff'); lidGrad.addColorStop(1, '#94a3b8');
+                ctx.fillStyle = lidGrad;
+                ctx.beginPath();
+                ctx.moveTo(ox - 60, oy - 80);
+                ctx.quadraticCurveTo(ox, oy - 110, ox + 60, oy - 80);
+                ctx.closePath(); ctx.fill(); ctx.stroke();
+                ctx.fillStyle = '#84cc16'; // Nút mở nắp
+                ctx.beginPath(); ctx.ellipse(ox, oy - 90, 15, 5, 0, 0, Math.PI*2); ctx.fill();
+
+                // Vòi ấm (Bên trái)
+                ctx.fillStyle = '#e2e8f0';
+                ctx.beginPath(); ctx.moveTo(ox - 55, oy - 60); ctx.lineTo(ox - 85, oy - 90); ctx.lineTo(ox - 45, oy - 70); ctx.fill(); ctx.stroke();
+
+                // Tay cầm (Bên phải) - Nhựa đen nhám
+                ctx.strokeStyle = '#1e293b'; ctx.lineWidth = 15; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+                ctx.beginPath(); ctx.moveTo(ox + 55, oy - 50); ctx.bezierCurveTo(ox + 100, oy - 60, ox + 110, oy + 30, ox + 60, oy + 50); ctx.stroke();
+
+                // Cửa sổ xem mực nước (Water Gauge)
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.9)'; // Kính đục
+                ctx.beginPath(); ctx.roundRect(ox - 20, oy - 40, 30, 110, 8); ctx.fill();
+                ctx.strokeStyle = '#cbd5e1'; ctx.lineWidth = 2; ctx.stroke();
+                
+                // Mực nước bên trong
+                let waterH = ((this.state.temp - 25) / 75) * 10 + 80; // Nước nở ra khi nóng
+                const waterGrad = ctx.createLinearGradient(0, oy + 70 - waterH, 0, oy + 70);
+                waterGrad.addColorStop(0, '#38bdf8'); waterGrad.addColorStop(1, '#0284c7');
+                ctx.fillStyle = waterGrad;
+                ctx.beginPath(); ctx.roundRect(ox - 18, oy + 68 - waterH, 26, waterH, 5); ctx.fill();
+                
+                // Bọt khí trong nước khi sôi
+                if (this.state.isBoiling || this.state.temp > 80) {
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+                    for(let i=0; i < (this.state.temp-50)/10; i++) {
+                        let bx = ox - 15 + Math.random()*20;
+                        let by = oy + 65 - Math.random()*waterH;
+                        ctx.beginPath(); ctx.arc(bx, by, Math.random()*2+1, 0, Math.PI*2); ctx.fill();
+                    }
+                }
+
+                // Vạch chia dung tích
+                ctx.fillStyle = '#64748b';
+                for(let i=0; i<4; i++) {
+                    ctx.fillRect(ox - 20, oy - 30 + i * 25, 10, 2);
+                }
+
+                // Đèn báo hiệu (Đỏ = Đang đun, Đỏ sẫm = Tắt)
+                ctx.fillStyle = this.state.isBoiling ? '#ef4444' : '#450a0a';
+                if(this.state.isBoiling) {
+                    ctx.shadowColor = '#ef4444'; ctx.shadowBlur = 10;
+                }
+                ctx.beginPath(); ctx.arc(ox, oy + 105, 6, 0, Math.PI * 2); ctx.fill();
+                ctx.shadowBlur = 0; // Tắt bóng
+
+                // --- 4. HIỆU ỨNG NHIỆT & HƠI NƯỚC ---
+                
+                // Nhiệt năng tỏa ra (Sóng nhiệt làm mờ)
+                ctx.globalCompositeOperation = 'screen';
+                this.state.heatWaves.forEach(w => {
+                    const waveGrad = ctx.createRadialGradient(w.x, w.y, 0, w.x, w.y, w.size);
+                    waveGrad.addColorStop(0, `rgba(239, 68, 68, ${w.life * 0.5})`); // Đỏ
+                    waveGrad.addColorStop(0.4, `rgba(249, 115, 22, ${w.life * 0.3})`); // Cam
+                    waveGrad.addColorStop(1, 'transparent');
+                    ctx.fillStyle = waveGrad;
+                    ctx.beginPath(); ctx.arc(w.x, w.y, w.size, 0, Math.PI*2); ctx.fill();
+                });
+                ctx.globalCompositeOperation = 'source-over';
+
+                // Hơi nước xịt ra từ vòi khi sôi
+                if(this.state.isBoiling && this.state.temp > 95) {
+                    ctx.fillStyle = `rgba(255, 255, 255, ${Math.random()*0.3 + 0.2})`;
+                    ctx.beginPath(); ctx.arc(ox - 95 - Math.random()*10, oy - 100 - Math.random()*20, Math.random()*15 + 10, 0, Math.PI*2); ctx.fill();
+                    ctx.beginPath(); ctx.arc(ox - 105 - Math.random()*15, oy - 120 - Math.random()*30, Math.random()*20 + 15, 0, Math.PI*2); ctx.fill();
+                }
+
+                // --- 5. GHI CHÚ BẢO TOÀN NĂNG LƯỢNG ---
+                ctx.fillStyle = '#94a3b8'; ctx.font = '12px Inter'; ctx.textAlign = 'center';
+                ctx.fillText("Năng lượng điện (vào) = Năng lượng hữu ích (nước) + Năng lượng hao phí (nhiệt tỏa ra môi trường)", canvas.width/2, oy + 160);
+
+            },
+            loop() { if(currentSim !== 'waste') return; this.update(); this.draw(); animationId = requestAnimationFrame(() => this.loop()); }
+        };
 
         // ==========================================
         // CHEMISTRY SIMULATION: STATES OF MATTER (OXYGEN)
@@ -1395,71 +1669,64 @@
                 
                 ctx.save(); ctx.translate(ox, oy); ctx.scale(scale, scale); ctx.translate(-ox, -oy);
 
-                // 1. Bóng người (Con người hoàn chỉnh) - Đồ họa cực đại
                 const skinGrad = ctx.createLinearGradient(ox - 80, oy - 180, ox + 80, oy + 150);
-                skinGrad.addColorStop(0, 'rgba(255, 237, 213, 0.15)'); // Cam nhạt
+                skinGrad.addColorStop(0, 'rgba(255, 237, 213, 0.15)'); 
                 skinGrad.addColorStop(1, 'rgba(253, 186, 116, 0.05)'); 
                 ctx.fillStyle = skinGrad;
                 ctx.strokeStyle = 'rgba(214, 211, 209, 0.4)'; ctx.lineWidth = 2.5;
                 
                 ctx.beginPath(); 
-                // Đỉnh đầu
                 ctx.moveTo(ox + 5, oy - 175);
-                ctx.bezierCurveTo(ox + 35, oy - 170, ox + 45, oy - 130, ox + 35, oy - 100); // Gáy
-                ctx.bezierCurveTo(ox + 30, oy - 80, ox + 40, oy - 75, ox + 65, oy - 60); // Vai phải
-                ctx.lineTo(ox + 95, oy + 20); // Cánh tay phải
-                ctx.lineTo(ox + 75, oy + 25); // Mặt trong tay phải
-                ctx.bezierCurveTo(ox + 60, oy - 30, ox + 55, oy - 35, ox + 50, oy - 10); // Nách phải
-                ctx.bezierCurveTo(ox + 55, oy + 50, ox + 50, oy + 100, ox + 55, oy + 150); // Hông & Chân phải
-                ctx.lineTo(ox + 15, oy + 150); // Đùi phải
-                ctx.bezierCurveTo(ox + 10, oy + 100, ox + 5, oy + 100, ox, oy + 130); // Đáy chậu
-                ctx.bezierCurveTo(ox - 5, oy + 100, ox - 10, oy + 100, ox - 15, oy + 150); // Đùi trái
-                ctx.lineTo(ox - 55, oy + 150); // Chân trái ngoài
-                ctx.bezierCurveTo(ox - 50, oy + 100, ox - 55, oy + 50, ox - 50, oy - 10); // Hông & Bụng trái
-                ctx.bezierCurveTo(ox - 55, oy - 35, ox - 60, oy - 30, ox - 75, oy + 25); // Nách trái & tay trái trong
-                ctx.lineTo(ox - 95, oy + 20); // Cánh tay trái ngoài
-                ctx.lineTo(ox - 65, oy - 60); // Vai trái
-                ctx.bezierCurveTo(ox - 40, oy - 75, ox - 25, oy - 80, ox - 20, oy - 90); // Cổ trước
-                ctx.lineTo(ox - 22, oy - 95); // Dưới cằm
-                ctx.quadraticCurveTo(ox - 35, oy - 98, ox - 35, oy - 105); // Cằm
-                ctx.lineTo(ox - 30, oy - 110); // Môi dưới
-                ctx.lineTo(ox - 42, oy - 115); // KHOANG MIỆNG MỞ
-                ctx.lineTo(ox - 30, oy - 120); // Môi trên
-                ctx.quadraticCurveTo(ox - 40, oy - 125, ox - 35, oy - 135); // Mũi
-                ctx.quadraticCurveTo(ox - 25, oy - 135, ox - 25, oy - 145); // Gốc mũi / Mắt
-                ctx.quadraticCurveTo(ox - 25, oy - 165, ox + 5, oy - 175); // Trán & Đỉnh đầu
+                ctx.bezierCurveTo(ox + 35, oy - 170, ox + 45, oy - 130, ox + 35, oy - 100); 
+                ctx.bezierCurveTo(ox + 30, oy - 80, ox + 40, oy - 75, ox + 65, oy - 60); 
+                ctx.lineTo(ox + 95, oy + 20); 
+                ctx.lineTo(ox + 75, oy + 25); 
+                ctx.bezierCurveTo(ox + 60, oy - 30, ox + 55, oy - 35, ox + 50, oy - 10); 
+                ctx.bezierCurveTo(ox + 55, oy + 50, ox + 50, oy + 100, ox + 55, oy + 150); 
+                ctx.lineTo(ox + 15, oy + 150); 
+                ctx.bezierCurveTo(ox + 10, oy + 100, ox + 5, oy + 100, ox, oy + 130); 
+                ctx.bezierCurveTo(ox - 5, oy + 100, ox - 10, oy + 100, ox - 15, oy + 150); 
+                ctx.lineTo(ox - 55, oy + 150); 
+                ctx.bezierCurveTo(ox - 50, oy + 100, ox - 55, oy + 50, ox - 50, oy - 10); 
+                ctx.bezierCurveTo(ox - 55, oy - 35, ox - 60, oy - 30, ox - 75, oy + 25); 
+                ctx.lineTo(ox - 95, oy + 20); 
+                ctx.lineTo(ox - 65, oy - 60); 
+                ctx.bezierCurveTo(ox - 40, oy - 75, ox - 25, oy - 80, ox - 20, oy - 90); 
+                ctx.lineTo(ox - 22, oy - 95); 
+                ctx.quadraticCurveTo(ox - 35, oy - 98, ox - 35, oy - 105); 
+                ctx.lineTo(ox - 30, oy - 110); 
+                ctx.lineTo(ox - 42, oy - 115); 
+                ctx.lineTo(ox - 30, oy - 120); 
+                ctx.quadraticCurveTo(ox - 40, oy - 125, ox - 35, oy - 135); 
+                ctx.quadraticCurveTo(ox - 25, oy - 135, ox - 25, oy - 145); 
+                ctx.quadraticCurveTo(ox - 25, oy - 165, ox + 5, oy - 175); 
                 ctx.closePath();
                 ctx.fill(); ctx.stroke();
 
-                // Vẽ thêm tai và mắt mờ
-                ctx.beginPath(); ctx.ellipse(ox + 15, oy - 120, 6, 10, 0.2, 0, Math.PI*2); ctx.stroke(); // Tai
-                ctx.beginPath(); ctx.moveTo(ox - 15, oy - 135); ctx.lineTo(ox - 10, oy - 135); ctx.stroke(); // Mắt nhắm
+                ctx.beginPath(); ctx.ellipse(ox + 15, oy - 120, 6, 10, 0.2, 0, Math.PI*2); ctx.stroke(); 
+                ctx.beginPath(); ctx.moveTo(ox - 15, oy - 135); ctx.lineTo(ox - 10, oy - 135); ctx.stroke(); 
 
                 ctx.globalAlpha = 0.95; 
                 ctx.shadowColor = 'rgba(0, 0, 0, 0.5)'; ctx.shadowBlur = 10; ctx.shadowOffsetX = 3; ctx.shadowOffsetY = 5;
 
-                // 2. Tuyến nước bọt (Salivary Gland) - Cam/Vàng
                 ctx.fillStyle = '#f59e0b'; 
                 ctx.beginPath(); ctx.ellipse(ox + 10, oy - 130, 8, 12, 0.5, 0, Math.PI*2); ctx.fill();
                 ctx.beginPath(); ctx.ellipse(ox + 15, oy - 120, 10, 6, -0.2, 0, Math.PI*2); ctx.fill();
 
                 ctx.shadowColor = 'transparent';
 
-                // 3. Khoang miệng & Thực quản (Mouth & Esophagus) - Hồng (#f472b6)
                 ctx.strokeStyle = '#f472b6'; ctx.lineWidth = 10; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
                 ctx.beginPath(); 
-                ctx.moveTo(ox - 25, oy - 118); // Miệng
-                ctx.lineTo(ox + 5, oy - 118); // Cổ họng
-                ctx.lineTo(ox + 5, oy - 20); // Dọc xuống dạ dày
+                ctx.moveTo(ox - 25, oy - 118); 
+                ctx.lineTo(ox + 5, oy - 118); 
+                ctx.lineTo(ox + 5, oy - 20); 
                 ctx.stroke();
 
                 ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
 
-                // 4. Tuyến tụy (Pancreas) - Vàng (#fde047)
                 ctx.fillStyle = '#fde047'; ctx.strokeStyle = '#ca8a04'; ctx.lineWidth = 1.5;
                 ctx.beginPath(); ctx.ellipse(ox + 15, oy + 15, 18, 6, 0.1, 0, Math.PI*2); ctx.fill(); ctx.stroke();
 
-                // 5. Gan (Liver) - Đỏ sẫm (#991b1b)
                 const liverGrad = ctx.createLinearGradient(ox-40, oy-30, ox, oy);
                 liverGrad.addColorStop(0, '#b91c1c'); liverGrad.addColorStop(1, '#7f1d1d');
                 ctx.fillStyle = liverGrad; ctx.strokeStyle = '#450a0a';
@@ -1469,11 +1736,9 @@
                 ctx.bezierCurveTo(ox - 30, oy + 15, ox - 10, oy + 10, ox + 15, oy - 5);
                 ctx.fill(); ctx.stroke();
 
-                // 6. Túi mật (Gallbladder) - Xanh lá (#16a34a)
                 ctx.fillStyle = '#16a34a'; ctx.strokeStyle = '#064e3b';
                 ctx.beginPath(); ctx.ellipse(ox - 5, oy + 8, 5, 8, -Math.PI/4, 0, Math.PI*2); ctx.fill(); ctx.stroke();
 
-                // 7. Dạ dày (Stomach) - Hồng đậm (#db2777)
                 const stomGrad = ctx.createRadialGradient(ox+15, oy-5, 5, ox+15, oy-5, 30);
                 stomGrad.addColorStop(0, '#f472b6'); stomGrad.addColorStop(1, '#be185d');
                 ctx.fillStyle = stomGrad; ctx.strokeStyle = '#831843';
@@ -1486,17 +1751,15 @@
 
                 ctx.shadowColor = 'transparent';
 
-                // 8. Đại tràng (Large Intestine) - Màu cam/nâu (#d97706)
                 ctx.shadowColor = 'rgba(0, 0, 0, 0.6)';
                 ctx.strokeStyle = '#b45309'; ctx.lineWidth = 18; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
                 ctx.beginPath();
-                ctx.moveTo(ox - 28, oy + 75); // Manh tràng
-                ctx.lineTo(ox - 28, oy + 35); // Lên
-                ctx.lineTo(ox + 28, oy + 35); // Ngang
-                ctx.lineTo(ox + 28, oy + 75); // Xuống
+                ctx.moveTo(ox - 28, oy + 75); 
+                ctx.lineTo(ox - 28, oy + 35); 
+                ctx.lineTo(ox + 28, oy + 35); 
+                ctx.lineTo(ox + 28, oy + 75); 
                 ctx.stroke();
                 
-                // Ngấn đại tràng
                 ctx.shadowColor = 'transparent';
                 ctx.strokeStyle = '#78350f'; ctx.lineWidth = 2;
                 for(let i=0; i<=40; i+=8) {
@@ -1507,36 +1770,31 @@
                     ctx.beginPath(); ctx.moveTo(ox - 28 + i, oy + 26); ctx.lineTo(ox - 28 + i, oy + 44); ctx.stroke();
                 }
 
-                // 9. Ruột non (Small Intestine) - Hồng nhạt Zigzag (#fca5a5)
                 ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
                 ctx.strokeStyle = '#fca5a5'; ctx.lineWidth = 14; ctx.lineJoin = 'round'; ctx.lineCap = 'round';
                 ctx.beginPath();
                 ctx.moveTo(ox + 5, oy + 15);
-                ctx.lineTo(ox - 15, oy + 45); // Zigzag 1
-                ctx.lineTo(ox + 15, oy + 55); // Zigzag 2
-                ctx.lineTo(ox - 15, oy + 65); // Zigzag 3
-                ctx.lineTo(ox + 10, oy + 75); // Zigzag 4
-                ctx.lineTo(ox - 28, oy + 75); // Nối manh tràng
+                ctx.lineTo(ox - 15, oy + 45); 
+                ctx.lineTo(ox + 15, oy + 55); 
+                ctx.lineTo(ox - 15, oy + 65); 
+                ctx.lineTo(ox + 10, oy + 75); 
+                ctx.lineTo(ox - 28, oy + 75); 
                 ctx.stroke();
 
-                // 10. Ruột thừa (Appendix) - Cam
                 ctx.strokeStyle = '#b45309'; ctx.lineWidth = 6; ctx.lineCap = 'round';
                 ctx.beginPath(); ctx.moveTo(ox - 28, oy + 75); ctx.lineTo(ox - 20, oy + 95); ctx.stroke();
 
-                // 11. Trực tràng / Hậu môn (Rectum) - Cam
                 ctx.strokeStyle = '#b45309'; ctx.lineWidth = 12; ctx.lineCap = 'round';
                 ctx.beginPath(); ctx.moveTo(ox + 28, oy + 75); ctx.quadraticCurveTo(ox + 10, oy + 85, ox + 5, oy + 115); ctx.stroke();
 
                 ctx.shadowColor = 'transparent';
 
-                // THỨC ĂN DI CHUYỂN BÁM SÁT ZIGZAG
                 if (this.state.isEating) {
                     const p = this.state.foodProgress; let fx = 0, fy = 0;
                     if(p < 0.1) { fx = ox - 25 + (p/0.1)*30; fy = oy - 118; } 
                     else if(p < 0.3) { fx = ox + 5; fy = oy - 118 + ((p-0.1)/0.2)*98; } 
                     else if(p < 0.4) { fx = ox + 5 + ((p-0.3)/0.1)*15; fy = oy - 20 + ((p-0.3)/0.1)*20; } 
                     else if(p < 0.7) { 
-                        // Chạy nội suy qua 5 đoạn Zigzag ruột non
                         let sp = (p-0.4)/0.3; 
                         if (sp < 0.2) { fx = ox + 5 - (sp/0.2)*20; fy = oy + 15 + (sp/0.2)*30; }
                         else if (sp < 0.4) { fx = ox - 15 + ((sp-0.2)/0.2)*30; fy = oy + 45 + ((sp-0.2)/0.2)*10; }
@@ -1557,7 +1815,6 @@
                     ctx.fillStyle = '#65a30d'; ctx.beginPath(); ctx.arc(fx, fy, 6, 0, Math.PI*2); ctx.fill(); ctx.strokeStyle = '#fff'; ctx.lineWidth = 1; ctx.stroke();
                 }
 
-                // VẼ NHÃN (LABELS)
                 if(this.state.showLabels && !this.state.selectedOrgan) {
                     ctx.fillStyle = 'white'; ctx.font = '13px Inter'; ctx.strokeStyle = 'rgba(255,255,255,0.7)'; ctx.lineWidth = 1.5; ctx.shadowColor = 'black'; ctx.shadowBlur = 4;
                     const drawLabel = (lx, ly, text, tx, ty) => { ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(tx, ty); ctx.stroke(); let textW = ctx.measureText(text).width; ctx.fillText(text, tx + (tx>lx?5:-textW-5), ty + 4); };
@@ -1579,7 +1836,6 @@
 
                 ctx.restore(); 
                 
-                // HIỂN THỊ MODAL BẢNG CHI TIẾT
                 if(this.state.selectedOrgan) {
                     ctx.fillStyle = 'rgba(15, 23, 42, 0.75)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
                     const modalW = Math.min(450, canvas.width - 40); const modalH = 220; const mx = canvas.width/2 - modalW/2; const my = canvas.height/2 - modalH/2;
@@ -1621,7 +1877,6 @@
                     let scales = type === 'compare' ? 0.55 : 1;
                     let totalScale = baseScale * scales;
 
-                    // 1. Ưu tiên kiểm tra va chạm với các chữ Nhãn chú thích (Click-to-Label)
                     if (this.state.showLabels && type !== 'compare' && this.state.labelHits) {
                         let unX = (cx - this.origin.x) / baseScale;
                         let unY = (cy - this.origin.y) / baseScale;
@@ -1633,7 +1888,6 @@
                         }
                     }
 
-                    // 2. Kiểm tra va chạm với khu vực Bào quan
                     const animalHits = [
                         { id: 'nucleolus', x: -5, y: -20, r: 25 }, { id: 'nucleus', x: -20, y: -10, r: 60 },
                         { id: 'golgi', x: 60, y: 60, r: 35 }, { id: 'mito', x: -80, y: 50, r: 30 }, { id: 'mito', x: 90, y: -40, r: 30 }, { id: 'mito', x: 10, y: 110, r: 30 },
@@ -1781,16 +2035,14 @@
                 ctx.save(); ctx.translate(ox, oy);
 
                 const cellR = 180;
-                // Màu nền động vật (Xanh dương nhạt như SGK)
                 const gradCell = ctx.createRadialGradient(-50, -50, 50, 0, 0, cellR);
                 gradCell.addColorStop(0, '#cffafe'); gradCell.addColorStop(1, '#7dd3fc');
                 ctx.fillStyle = gradCell;
                 
                 ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 20;
                 ctx.beginPath();
-                // SỬA LỖI ĐỒ HỌA: Vòng lặp đóng kín màng tế bào chuẩn 100%, lượn sóng hô hấp mượt mà
                 for(let i=0; i<=Math.PI*2 + 0.1; i+=0.05) {
-                    let angle = i > Math.PI*2 ? 0 : i; // Đảm bảo điểm cuối khớp hoàn toàn điểm đầu
+                    let angle = i > Math.PI*2 ? 0 : i; 
                     let r = cellR + Math.sin(angle*6 + globalTime*0.02)*6 + Math.cos(angle*4 - globalTime*0.015)*5;
                     let px = r * Math.cos(angle); let py = r * Math.sin(angle);
                     if(i===0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
@@ -1798,7 +2050,6 @@
                 ctx.closePath();
                 ctx.fill(); ctx.shadowColor = 'transparent';
                 
-                // Môi trường hạt lơ lửng sinh động
                 ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
                 for(let i=0; i<150; i++) {
                     let px = Math.sin(i*9 + globalTime*0.005)*140;
@@ -1806,7 +2057,6 @@
                     ctx.beginPath(); ctx.arc(px, py, Math.random()*3+1, 0, Math.PI*2); ctx.fill();
                 }
 
-                // Sợi khung xương tế bào (Cytoskeleton) bồng bềnh
                 ctx.strokeStyle = 'rgba(14, 165, 233, 0.3)'; ctx.lineWidth = 1.5;
                 for(let i=0; i<15; i++) {
                     let drift = Math.sin(globalTime*0.01 + i)*10;
@@ -1816,9 +2066,8 @@
                     ctx.stroke();
                 }
 
-                ctx.lineWidth = 6; ctx.strokeStyle = '#0284c7'; ctx.stroke(); // Viền ngoài xanh đậm
+                ctx.lineWidth = 6; ctx.strokeStyle = '#0284c7'; ctx.stroke(); 
 
-                // Nhân tế bào dao động mượt
                 const nucX = -20 + Math.sin(globalTime*0.02)*2; 
                 const nucY = -10 + wobble;
                 const nucGrad = ctx.createRadialGradient(nucX-15, nucY-15, 10, nucX, nucY, 55);
@@ -1830,32 +2079,27 @@
                 ctx.shadowColor = 'transparent';
                 ctx.lineWidth = 3; ctx.strokeStyle = '#312e81'; ctx.stroke();
                 
-                // Lỗ màng nhân (nhấp nháy quay nhẹ)
                 ctx.fillStyle = '#312e81';
                 for(let i=0; i<15; i++) { 
                     let a = i * (Math.PI*2/15) + globalTime*0.005;
                     ctx.beginPath(); ctx.arc(nucX + Math.cos(a)*55, nucY + Math.sin(a)*55, 2.5, 0, Math.PI*2); ctx.fill(); 
                 }
 
-                ctx.fillStyle = '#312e81'; ctx.beginPath(); ctx.arc(nucX + 15, nucY + 10, 18, 0, Math.PI*2); ctx.fill(); // Nhân con
+                ctx.fillStyle = '#312e81'; ctx.beginPath(); ctx.arc(nucX + 15, nucY + 10, 18, 0, Math.PI*2); ctx.fill(); 
 
-                // Lưới nội chất bám theo sự rung lắc của nhân
                 ctx.strokeStyle = '#f8fafc'; ctx.lineWidth = 7;
                 for(let r=65; r<=95; r+=15) {
                     ctx.beginPath(); ctx.arc(nucX, nucY, r, -Math.PI*0.3, Math.PI*0.9); ctx.stroke();
-                    ctx.fillStyle = '#ef4444'; // Ribosome
+                    ctx.fillStyle = '#ef4444'; 
                     for(let a=-Math.PI*0.3; a<=Math.PI*0.9; a+=0.15) { ctx.beginPath(); ctx.arc(nucX + Math.cos(a)*r, nucY + Math.sin(a)*r, 1.5, 0, Math.PI*2); ctx.fill(); }
                 }
 
-                // Bộ máy Golgi lơ lửng dao động nhẹ
                 this.drawGolgiGreen(70, 70 + wobble*0.5, -0.5 + Math.sin(globalTime*0.02)*0.1, 0.8);
 
-                // Ti thể nhịp nhàng hô hấp
                 this.drawMitoRed(-80, 50 + wobble*1.2, 0.5 + Math.cos(globalTime*0.01)*0.1, 1);
                 this.drawMitoRed(90, -40 - wobble, -0.8 + Math.sin(globalTime*0.015)*0.1, 1);
                 this.drawMitoRed(10, 110 + wobble*0.8, -0.2 + Math.cos(globalTime*0.02)*0.1, 0.9);
 
-                // Lysosome / Peroxisome trôi dạt 
                 ctx.fillStyle = '#60a5fa'; ctx.strokeStyle = '#1e3a8a'; ctx.lineWidth=2; ctx.shadowColor = 'rgba(0,0,0,0.2)'; ctx.shadowBlur = 5;
                 const lysos = [
                     [-60 + Math.sin(globalTime*0.03)*5, -90 + Math.cos(globalTime*0.02)*5], 
@@ -1867,12 +2111,10 @@
                 });
                 ctx.shadowColor = 'transparent';
 
-                // Trung thể quay từ từ
                 ctx.save(); ctx.translate(40, -80); ctx.rotate(globalTime*0.01); ctx.fillStyle = '#3b82f6';
                 for(let i=0; i<4; i++) { ctx.rotate(Math.PI/4); ctx.fillRect(-10, -2, 20, 4); }
                 ctx.restore();
 
-                // Ribosome tự do trôi lơ lửng trong giới hạn màng
                 ctx.fillStyle = '#ef4444';
                 for(let i=0; i<30; i++) { 
                     let rx = -120 + (i*17 + globalTime*0.5)%200;
@@ -1882,7 +2124,6 @@
                     }
                 }
 
-                // Nhãn Labeling kết hợp hit-box cực chuẩn
                 if(this.state.showLabels && !isCompare) {
                     ctx.fillStyle = 'white'; ctx.font = '13px Inter'; ctx.strokeStyle = 'rgba(0,0,0,0.5)'; ctx.lineWidth = 2; ctx.shadowColor = 'black'; ctx.shadowBlur = 4;
                     this.state.labelHits = [];
@@ -1891,7 +2132,6 @@
                         let textW = ctx.measureText(text).width;
                         let alignX = tx > lx ? tx + 5 : tx - textW - 5;
                         ctx.fillText(text, alignX, ty + 4);
-                        // Sinh hitbox bao trọn tên nhãn để Click-to-Label
                         this.state.labelHits.push({id: id, x: alignX + textW/2, y: ty, w: textW + 20, h: 20});
                     };
                     drawLabel('membrane', -cellR+10, 0, "Màng sinh chất", -cellR-40, -40); 
@@ -1909,7 +2149,6 @@
             drawPlantCell(ox, oy, wobble, isCompare) {
                 ctx.save(); ctx.translate(ox, oy);
                 
-                // Thành tế bào (Cell Wall) - Khung lục giác chuẩn SGK
                 ctx.fillStyle = '#4ade80'; ctx.shadowColor = 'rgba(0,0,0,0.5)'; ctx.shadowBlur = 15;
                 ctx.strokeStyle = '#15803d'; ctx.lineWidth = 18; ctx.lineJoin = 'round';
                 ctx.beginPath();
@@ -1921,7 +2160,6 @@
                 ctx.closePath(); ctx.fill(); ctx.stroke();
                 ctx.shadowColor = 'transparent';
 
-                // Cầu sinh chất (Plasmodesmata)
                 ctx.lineWidth = 18;
                 for(let i=0; i<6; i++) {
                     let a = i * Math.PI / 3;
@@ -1930,9 +2168,8 @@
                     ctx.beginPath(); ctx.moveTo(px1, py1); ctx.lineTo(px2, py2); ctx.stroke();
                 }
                 
-                // Màng sinh chất (Cell Membrane) & Cytoplasm
                 ctx.lineWidth = 4; ctx.strokeStyle = '#fef08a';
-                ctx.fillStyle = '#d9f99d'; // Tế bào chất xanh lá mạ
+                ctx.fillStyle = '#d9f99d'; 
                 ctx.beginPath();
                 for(let i=0; i<6; i++) {
                     let a = i * Math.PI / 3;
@@ -1941,13 +2178,11 @@
                 }
                 ctx.closePath(); ctx.fill(); ctx.stroke();
 
-                // Sợi khung xương tế bào thực vật
                 ctx.strokeStyle = 'rgba(21, 128, 61, 0.2)'; ctx.lineWidth = 1.5;
                 for(let i=0; i<15; i++) {
                     ctx.beginPath(); ctx.moveTo((Math.random()-0.5)*300, (Math.random()-0.5)*300); ctx.lineTo((Math.random()-0.5)*300, (Math.random()-0.5)*300); ctx.stroke();
                 }
 
-                // Không bào trung tâm (Vacuole) - Khối dịch khổng lồ bên phải
                 ctx.fillStyle = '#bae6fd'; ctx.strokeStyle = '#0ea5e9'; ctx.lineWidth = 3;
                 ctx.beginPath();
                 ctx.moveTo(20, -70);
@@ -1955,40 +2190,33 @@
                 ctx.bezierCurveTo(70, 160, -20, 140, -10, 80);
                 ctx.bezierCurveTo(-5, 40, -30, -50, 20, -70);
                 ctx.fill(); ctx.stroke();
-                // Highlight không bào
                 ctx.strokeStyle = 'rgba(255,255,255,0.6)'; ctx.lineWidth = 2;
                 ctx.beginPath(); ctx.moveTo(50, -40); ctx.quadraticCurveTo(80, 0, 60, 60); ctx.stroke();
 
-                // Nhân tế bào (Nucleus) - Lệch sang trái
                 const nucX = -60; const nucY = -50 + wobble;
                 const nucGrad = ctx.createRadialGradient(nucX-10, nucY-10, 5, nucX, nucY, 45);
                 nucGrad.addColorStop(0, '#818cf8'); nucGrad.addColorStop(1, '#3730a3');
                 ctx.fillStyle = nucGrad;
                 ctx.beginPath(); ctx.arc(nucX, nucY, 45, 0, Math.PI*2); ctx.fill();
                 ctx.lineWidth = 3; ctx.strokeStyle = '#1e3a8a'; ctx.setLineDash([8, 4]); ctx.stroke(); ctx.setLineDash([]);
-                ctx.fillStyle = '#1e3a8a'; ctx.beginPath(); ctx.arc(nucX + 10, nucY + 5, 12, 0, Math.PI*2); ctx.fill(); // Nhân con
+                ctx.fillStyle = '#1e3a8a'; ctx.beginPath(); ctx.arc(nucX + 10, nucY + 5, 12, 0, Math.PI*2); ctx.fill(); 
 
-                // Lưới nội chất hạt bao quanh nhân
                 ctx.strokeStyle = '#fb923c'; ctx.lineWidth = 6;
                 for(let r=55; r<=85; r+=15) {
                     ctx.beginPath(); ctx.arc(nucX, nucY, r, -Math.PI*0.8, Math.PI*1.2); ctx.stroke();
-                    ctx.fillStyle = '#dc2626'; // Ribosome đỏ
+                    ctx.fillStyle = '#dc2626'; 
                     for(let a=-Math.PI*0.8; a<=Math.PI*1.2; a+=0.2) { ctx.beginPath(); ctx.arc(nucX + Math.cos(a)*r, nucY + Math.sin(a)*r, 2.5, 0, Math.PI*2); ctx.fill(); }
                 }
 
-                // Lục lạp (Chloroplasts)
                 this.drawChloroplast(-100, -20 + wobble, 0.5, 1.1);
                 this.drawChloroplast(-80, 80 - wobble, -0.3, 1.1);
                 this.drawChloroplast(20, -110 + wobble, 1.2, 1.1);
                 
-                // Ti thể (Xanh lam theo SGK)
                 this.drawMito(-30, 100 + wobble, 0.8, 0.9);
                 this.drawMito(80, -100 - wobble, -0.5, 0.9);
 
-                // Golgi
                 this.drawGolgi(-40, 90 + wobble*0.5, -0.3, 0.8);
 
-                // Chú thích & Click-to-label
                 if (this.state.showLabels && !isCompare) {
                     ctx.fillStyle = 'white'; ctx.font = '13px Inter'; ctx.strokeStyle = 'rgba(0,0,0,0.5)'; ctx.lineWidth = 2;
                     ctx.shadowColor = 'black'; ctx.shadowBlur = 4;
@@ -2292,7 +2520,7 @@
                 ctx.fillStyle = 'rgba(255,255,255,0.15)';
                 ctx.beginPath(); ctx.roundRect(-130, -55, 260, 25, 12); ctx.fill();
 
-                // Thành tế bào (Cell Wall) - Lớp dày màu Cam sẫm
+                // Thành tế bào (Cell Wall) - Cam/Nâu
                 draw3DLayer(300, 110, '#f59e0b', '#d97706', '#92400e', '#78350f', 2);
 
                 // Màng sinh chất (Plasma Membrane) - Vàng
@@ -2316,11 +2544,14 @@
                 // Lớp viền dày tối
                 ctx.strokeStyle = '#7e22ce'; ctx.lineWidth = 6;
                 ctx.beginPath();
+                let lastX = 0, lastY = 0;
                 for(let i=0; i<=150; i++) {
                     let t = i * 0.15;
                     let newX = Math.cos(t*1.3 + globalTime*0.01*act) * (60 + Math.sin(t*2.1)*20);
                     let newY = Math.sin(t*1.7 - globalTime*0.015*act) * (20 + Math.cos(t*2.7)*10);
-                    if(i===0) ctx.moveTo(newX, newY); else ctx.lineTo(newX, newY);
+                    if(i===0) ctx.moveTo(newX, newY);
+                    else ctx.quadraticCurveTo(lastX + (newX-lastX)/2 + Math.random()*5, lastY + (newY-lastY)/2 + Math.random()*5, newX, newY);
+                    lastX = newX; lastY = newY;
                 }
                 ctx.stroke();
 
@@ -2342,19 +2573,13 @@
                 });
 
                 // --- 6. RIBOSOME (Hạt đỏ nâu) ---
-                for(let i=0; i<45; i++) {
-                    let rx = Math.sin(i*11)*110; 
-                    let ry = Math.cos(i*7)*35;
-                    // Chuyển động Brownian nhẹ
-                    rx += Math.sin(globalTime*0.02*act + i)*3;
-                    ry += Math.cos(globalTime*0.02*act + i)*3;
-                    
-                    // Lõm bóng 3D cho hạt
-                    const riboGrad = ctx.createRadialGradient(rx-1, ry-1, 0, rx, ry, 3.5);
-                    riboGrad.addColorStop(0, '#fca5a5'); riboGrad.addColorStop(1, '#991b1b');
-                    ctx.fillStyle = riboGrad;
-                    
-                    ctx.beginPath(); ctx.arc(rx, ry, 3.5, 0, Math.PI*2); ctx.fill();
+                ctx.fillStyle = '#b91c1c';
+                for(let i=0; i<40; i++) {
+                    // Tránh vùng nhân ở giữa
+                    let rx = (Math.random()-0.5)*230; let ry = (Math.random()-0.5)*60;
+                    if(Math.hypot(rx, ry) > 40) {
+                        ctx.beginPath(); ctx.arc(rx, ry, 2.5, 0, Math.PI*2); ctx.fill();
+                    }
                 }
 
                 ctx.restore(); // Kết thúc vẽ xoay vi khuẩn
@@ -2374,7 +2599,6 @@
                         let textW = ctx.measureText(text).width;
                         let alignX = labelGlobalX > gx ? labelGlobalX + 5 : labelGlobalX - textW - 5;
                         ctx.fillText(text, alignX, labelGlobalY + 4);
-                        
                         // Hitbox cho chữ để Click-to-Label
                         this.state.labelHits.push({id: id, x: alignX + textW/2, y: labelGlobalY, w: textW + 20, h: 20});
                     };
@@ -2429,7 +2653,7 @@
                         }
                         ctx.fillText(line, x, y);
                     };
-                    wrapText(info.d, mx + 30, my + 90, modalW - 60, 24);
+                    wrapText(info.d, mx + 30, my + 90, modalW - 60, 22);
                     
                     ctx.fillStyle = '#a8a29e'; ctx.font = 'italic 12px Inter'; ctx.textAlign = 'center';
                     ctx.fillText("Click bất kỳ đâu để đóng", canvas.width/2, my + modalH - 20);
@@ -2494,6 +2718,15 @@
                         <h3 class="text-white font-semibold text-sm mb-3">Môi trường 2 (Bên dưới)</h3>
                         ${createSelect('opt-m2', 'Chất liệu', [{value:1.52,label:'Thủy tinh (n=1.52)'},{value:1.0,label:'Chân không/KK (n=1.0)'},{value:1.33,label:'Nước (n=1.33)'},{value:2.42,label:'Kim cương (n=2.42)'}], 'updateOptM2')}
                     </div>`;
+                } else if (simName === 'waste') {
+                    html += `
+                        <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-4 shadow-lg">
+                            <h3 class="text-white font-semibold text-sm mb-3 flex items-center gap-2"><i class="fa-solid fa-plug ${themeClass}"></i> Điều khiển ấm điện</h3>
+                            ${createSlider('waste-insulation', 'Độ cách nhiệt vỏ ấm', 0, 100, 1, simulations.waste.state.insulation, '%', 'updateWasteInsulation')}
+                        </div>
+                        <button onclick="simulations.waste.togglePower()" id="btn-kettle-power" class="w-full py-3 bg-red-600 hover:bg-red-500 text-white rounded-xl font-bold transition-all active:scale-95 text-sm mt-4 shadow-[0_0_15px_rgba(220,38,38,0.5)]">
+                            <i class="fa-solid fa-power-off mr-2"></i> BẬT ẤM
+                        </button>`;
                 }
             } 
             else if (currentDomain === 'chemistry') {
@@ -2615,7 +2848,7 @@
 
         window.updateProjAngle = (v) => { simulations.projectile.state.angle = v; if(!simulations.projectile.state.isFiring) simulations.projectile.draw(); };
         window.updateProjVel = (v) => simulations.projectile.state.velocity = v;
-        window.updateProjH0 = (v) => { simulations.projectile.state.h0 = v; simulations.projectile.state.maxH = v; if(!simulations.projectile.state.isFiring) { simulations.projectile.state.y = v; simulations.projectile.draw(); } };
+        window.updateProjH0 = (v) => { simulations.projectile.state.h0 = v; simulations.projectile.state.maxH = v; if(!simulations.projectile.state.isFiring) simulations.projectile.draw(); };
         
         window.updatePendLength = (v) => { simulations.pendulum.state.length = v; simulations.pendulum.updateBobPos(); simulations.pendulum.draw(); };
         window.updatePendDamp = (v) => simulations.pendulum.state.damping = 1 - (v/10); 
@@ -2630,6 +2863,8 @@
         window.updateOptAngle = (v) => simulations.optics.state.angleIncidence = v;
         window.updateOptM1 = (v) => simulations.optics.state.n1 = parseFloat(v);
         window.updateOptM2 = (v) => simulations.optics.state.n2 = parseFloat(v);
+
+        window.updateWasteInsulation = (v) => simulations.waste.state.insulation = v;
 
         window.updateChemAcid = (v) => simulations.titration.state.acidStrength = v;
         window.updateChemBase = (v) => simulations.titration.state.baseStrength = v;
